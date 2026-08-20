@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1055328256561",
+    "project_id": "cloud-guard-63f42",
+    "storage_bucket": "cloud-guard-63f42.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1055328256561:android:9e3ab6fa4e96c338014b10",
+        "android_client_info": {
+          "package_name": "com.example.cloud_guard"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJc08-KW7ni3j4UMFpZsd2jnwSxbVL4KA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
