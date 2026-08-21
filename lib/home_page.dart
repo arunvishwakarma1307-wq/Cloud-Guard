@@ -1,78 +1,37 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
 import 'login_page.dart';
 import 'storage_page.dart';
 import 'security_page.dart';
 import 'upload_page.dart';
+import 'settings_page.dart';
 
 class CloudGuardHome extends StatelessWidget {
   const CloudGuardHome({super.key});
 
-  // =====================================================
-  // LOGOUT
-  // =====================================================
-
   Future<void> logout(BuildContext context) async {
-    try {
-      // Firebase se user ko sign out karo
-      await FirebaseAuth.instance.signOut();
+    await FirebaseAuth.instance.signOut();
 
-      if (!context.mounted) return;
+    if (!context.mounted) return;
 
-      // Current Home Page ko remove karke
-      // Login Page open karo
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (context) => const LoginPage(),
-        ),
-        (route) => false,
-      );
-    } catch (e) {
-      if (!context.mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "Logout failed: $e",
-          ),
-        ),
-      );
-    }
-  }
-
-  // =====================================================
-  // MESSAGE
-  // =====================================================
-
-  void showMessage(
-    BuildContext context,
-    String message,
-  ) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const LoginPage(),
       ),
+      (route) => false,
     );
   }
-
-  // =====================================================
-  // HOME PAGE
-  // =====================================================
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xfff6f8ff),
 
-      // =================================================
-      // APP BAR
-      // =================================================
-
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-
         title: const Text(
           "☁ Cloud Guard",
           style: TextStyle(
@@ -80,32 +39,7 @@ class CloudGuardHome extends StatelessWidget {
             color: Colors.black,
           ),
         ),
-
-        // =================================================
-        // LOGOUT BUTTON
-        // =================================================
-
-        actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.logout,
-              color: Colors.black,
-            ),
-
-            tooltip: "Logout",
-
-            onPressed: () {
-              logout(context);
-            },
-          ),
-
-          const SizedBox(width: 10),
-        ],
       ),
-
-      // =================================================
-      // BODY
-      // =================================================
 
       body: Padding(
         padding: const EdgeInsets.all(20),
@@ -114,13 +48,8 @@ class CloudGuardHome extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
 
           children: [
-            // =================================================
-            // WELCOME
-            // =================================================
-
             const Text(
               "Welcome Back 👋",
-
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
@@ -131,24 +60,16 @@ class CloudGuardHome extends StatelessWidget {
 
             const Text(
               "Your cloud security dashboard",
-
               style: TextStyle(
                 color: Colors.grey,
-                fontSize: 16,
               ),
             ),
 
             const SizedBox(height: 25),
 
-            // =================================================
-            // CLOUD STATUS
-            // =================================================
-
             Card(
               elevation: 8,
-
               color: Colors.blue,
-
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(25),
               ),
@@ -166,10 +87,8 @@ class CloudGuardHome extends StatelessWidget {
                         children: [
                           Text(
                             "Cloud Status",
-
                             style: TextStyle(
                               color: Colors.white70,
-                              fontSize: 16,
                             ),
                           ),
 
@@ -177,7 +96,6 @@ class CloudGuardHome extends StatelessWidget {
 
                           Text(
                             "System Secure",
-
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 25,
@@ -189,7 +107,6 @@ class CloudGuardHome extends StatelessWidget {
 
                           Text(
                             "All cloud services are running normally",
-
                             style: TextStyle(
                               color: Colors.white70,
                             ),
@@ -200,9 +117,7 @@ class CloudGuardHome extends StatelessWidget {
 
                     Icon(
                       Icons.check_circle,
-
                       color: Colors.white,
-
                       size: 35,
                     ),
                   ],
@@ -212,13 +127,8 @@ class CloudGuardHome extends StatelessWidget {
 
             const SizedBox(height: 25),
 
-            // =================================================
-            // SECURITY SCORE
-            // =================================================
-
             const Text(
               "Security Score",
-
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -227,21 +137,15 @@ class CloudGuardHome extends StatelessWidget {
 
             const SizedBox(height: 10),
 
-            Card(
-              elevation: 5,
-
-              child: const ListTile(
+            const Card(
+              child: ListTile(
                 leading: Icon(
                   Icons.security,
-
                   color: Colors.green,
-
-                  size: 35,
                 ),
 
                 title: Text(
                   "92%",
-
                   style: TextStyle(
                     fontSize: 25,
                     fontWeight: FontWeight.bold,
@@ -256,13 +160,8 @@ class CloudGuardHome extends StatelessWidget {
 
             const SizedBox(height: 25),
 
-            // =================================================
-            // QUICK ACTIONS
-            // =================================================
-
             const Text(
               "Quick Actions",
-
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -271,22 +170,16 @@ class CloudGuardHome extends StatelessWidget {
 
             const SizedBox(height: 15),
 
-            // =================================================
-            // STORAGE + SECURITY
-            // =================================================
-
             Row(
               children: [
                 Expanded(
                   child: ActionCard(
                     icon: Icons.storage,
-
                     title: "Storage",
 
                     onTap: () {
                       Navigator.push(
                         context,
-
                         MaterialPageRoute(
                           builder: (context) =>
                               const StoragePage(),
@@ -301,13 +194,11 @@ class CloudGuardHome extends StatelessWidget {
                 Expanded(
                   child: ActionCard(
                     icon: Icons.security,
-
                     title: "Security",
 
                     onTap: () {
                       Navigator.push(
                         context,
-
                         MaterialPageRoute(
                           builder: (context) =>
                               const SecurityPage(),
@@ -321,22 +212,16 @@ class CloudGuardHome extends StatelessWidget {
 
             const SizedBox(height: 15),
 
-            // =================================================
-            // UPLOAD + SETTINGS
-            // =================================================
-
             Row(
               children: [
                 Expanded(
                   child: ActionCard(
                     icon: Icons.cloud_upload,
-
                     title: "Upload",
 
                     onTap: () {
                       Navigator.push(
                         context,
-
                         MaterialPageRoute(
                           builder: (context) =>
                               const UploadPage(),
@@ -351,18 +236,41 @@ class CloudGuardHome extends StatelessWidget {
                 Expanded(
                   child: ActionCard(
                     icon: Icons.settings,
-
                     title: "Settings",
 
                     onTap: () {
-                      showMessage(
+                      Navigator.push(
                         context,
-                        "Settings opened",
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const SettingsPage(),
+                        ),
                       );
                     },
                   ),
                 ),
               ],
+            ),
+
+            const SizedBox(height: 25),
+
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+
+              child: ElevatedButton.icon(
+                onPressed: () => logout(context),
+
+                icon: const Icon(Icons.logout),
+
+                label: const Text(
+                  "Logout",
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -371,24 +279,15 @@ class CloudGuardHome extends StatelessWidget {
   }
 }
 
-// =====================================================
-// ACTION CARD
-// =====================================================
-
 class ActionCard extends StatelessWidget {
   final IconData icon;
-
   final String title;
-
   final VoidCallback onTap;
 
   const ActionCard({
     super.key,
-
     required this.icon,
-
     required this.title,
-
     required this.onTap,
   });
 
@@ -396,7 +295,6 @@ class ActionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(20),
-
       onTap: onTap,
 
       child: Card(
@@ -416,9 +314,7 @@ class ActionCard extends StatelessWidget {
             children: [
               Icon(
                 icon,
-
                 size: 35,
-
                 color: Colors.blue,
               ),
 
@@ -426,7 +322,6 @@ class ActionCard extends StatelessWidget {
 
               Text(
                 title,
-
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                 ),
