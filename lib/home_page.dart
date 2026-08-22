@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import 'login_page.dart';
 import 'storage_page.dart';
 import 'security_page.dart';
 import 'upload_page.dart';
@@ -12,16 +11,6 @@ class CloudGuardHome extends StatelessWidget {
 
   Future<void> logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
-
-    if (!context.mounted) return;
-
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const LoginPage(),
-      ),
-      (route) => false,
-    );
   }
 
   @override

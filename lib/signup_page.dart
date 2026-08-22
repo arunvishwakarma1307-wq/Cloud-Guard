@@ -1,8 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import 'home_page.dart';
-
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
 
@@ -57,16 +55,7 @@ class _SignupPageState extends State<SignupPage> {
         password: password,
       );
 
-      if (!mounted) return;
-
       showMessage("Account created successfully");
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const CloudGuardHome(),
-        ),
-      );
     } on FirebaseAuthException catch (e) {
       String message = "Account creation failed";
 

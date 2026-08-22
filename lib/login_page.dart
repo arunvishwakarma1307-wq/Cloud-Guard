@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import 'home_page.dart';
 import 'signup_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -44,14 +43,6 @@ class _LoginPageState extends State<LoginPage> {
         password: password,
       );
 
-      if (!mounted) return;
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const CloudGuardHome(),
-        ),
-      );
     } on FirebaseAuthException catch (e) {
       String message = "Login failed";
 
