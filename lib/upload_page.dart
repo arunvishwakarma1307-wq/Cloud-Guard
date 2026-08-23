@@ -1,7 +1,6 @@
-import 'dart:html' as html;
+import 'dart:typed_data';
 
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 class UploadPage extends StatefulWidget {
@@ -12,132 +11,113 @@ class UploadPage extends StatefulWidget {
 }
 
 class _UploadPageState extends State<UploadPage> {
+  static const int maxPdfFileSizeBytes = 10 * 1024 * 1024;
+
   String? selectedFileName;
   int? selectedFileSize;
 
-  html.File? selectedFile;
-
-  bool isUploading = false;
-  double uploadProgress = 0;
+  PlatformFile? selectedFile;
+  bool isSelectingFile = false;
 
   // =====================================================
   // CHOOSE FILE
   // =====================================================
 
-  void pickFile() {
-    final input = html.FileUploadInputElement();
-
-    input.accept = '.pdf';
-
-    input.click();
-
-    input.onChange.listen((event) {
-      final files = input.files;
-
-      if (files != null && files.isNotEmpty) {
-        final file = files.first;
-
-        setState(() {
-          selectedFile = file;
-          selectedFileName = file.name;
-          selectedFileSize = file.size;
-          uploadProgress = 0;
-        });
-      }
-    });
-  }
-
-  // =====================================================
-  // UPLOAD FILE TO FIREBASE STORAGE
-  // =====================================================
-
-  Future<void> uploadFile() async {
-    if (selectedFile == null) {
-      showMessage("Please choose a PDF first");
-      return;
-    }
-
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user == null) {
-      showMessage("Please login first");
-      return;
-    }
-
+  Future<void> pickFile() async {
     setState(() {
-      isUploading = true;
-      uploadProgress = 0;
+      isSelectingFile = true;
     });
 
     try {
-      final file = selectedFile!;
-
-      // Each user's files will be stored separately.
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child("users")
-          .child(user.uid)
-          .child("files")
-          .child(file.name);
-
-      // Create upload task
-      final uploadTask = storageRef.putBlob(file);
-
-      // Listen to upload progress
-      uploadTask.snapshotEvents.listen((snapshot) {
-        if (snapshot.totalBytes > 0) {
-          setState(() {
-            uploadProgress =
-                snapshot.bytesTransferred /
-                    snapshot.totalBytes;
-          });
-        }
-      });
-
-      // Wait until upload finishes
-      await uploadTask;
-
-      if (!mounted) return;
-
-      setState(() {
-        isUploading = false;
-        uploadProgress = 1;
-      });
-
-      showMessage(
-        "File uploaded successfully!",
+      final file = await FilePicker.pickFile(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
       );
-    } on FirebaseException catch (e) {
-      if (!mounted) return;
 
-      setState(() {
-        isUploading = false;
-      });
-
-      String message = "Upload failed";
-
-      if (e.code == 'unauthorized') {
-        message = "You don't have permission to upload";
-      } else if (e.code == 'canceled') {
-        message = "Upload cancelled";
-      } else if (e.code == 'quota-exceeded') {
-        message = "Storage quota exceeded";
-      } else if (e.code == 'object-not-found') {
-        message = "Storage location not found";
+      if (!mounted || file == null) {
+        return;
       }
 
-      showMessage(message);
-    } catch (e) {
-      if (!mounted) return;
+      final fileSize = await file.length();
+      final validationMessage = await validatePdfFile(file, fileSize);
+
+      if (validationMessage != null) {
+        showMessage(validationMessage);
+        return;
+      }
 
       setState(() {
-        isUploading = false;
+        selectedFile = file;
+        selectedFileName = file.name;
+        selectedFileSize = fileSize;
       });
-
-      showMessage(
-        "Something went wrong during upload",
-      );
+    } catch (_) {
+      if (mounted) {
+        showMessage("Unable to select a PDF file. Please try again.");
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isSelectingFile = false;
+        });
+      }
     }
+  }
+
+  // =====================================================
+  // FILE VALIDATION
+  // =====================================================
+
+  Future<String?> validatePdfFile(PlatformFile file, int fileSize) async {
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      return "Please choose a PDF file";
+    }
+
+    if (fileSize > maxPdfFileSizeBytes) {
+      return "PDF files must be 10 MB or smaller";
+    }
+
+    try {
+      final bytes = await file.readAsBytes();
+
+      if (!hasPdfSignature(bytes)) {
+        return "The selected file is not a valid PDF";
+      }
+    } catch (_) {
+      // Some platforms do not expose file bytes until a later operation.
+    }
+
+    return null;
+  }
+
+  bool hasPdfSignature(Uint8List bytes) {
+    const pdfSignature = [0x25, 0x50, 0x44, 0x46, 0x2D];
+
+    if (bytes.length < pdfSignature.length) {
+      return false;
+    }
+
+    for (var index = 0; index < pdfSignature.length; index++) {
+      if (bytes[index] != pdfSignature[index]) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  void removeSelection() {
+    setState(() {
+      selectedFile = null;
+      selectedFileName = null;
+      selectedFileSize = null;
+    });
+  }
+
+  void showStorageUnavailable() {
+    showMessage(
+      "Cloud upload is unavailable because Firebase Storage is not configured or enabled.",
+    );
   }
 
   // =====================================================
@@ -145,11 +125,9 @@ class _UploadPageState extends State<UploadPage> {
   // =====================================================
 
   void showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-      ),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   // =====================================================
@@ -184,9 +162,7 @@ class _UploadPageState extends State<UploadPage> {
       appBar: AppBar(
         title: const Text(
           "Cloud Upload",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
 
@@ -195,222 +171,159 @@ class _UploadPageState extends State<UploadPage> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
 
-          children: [
-            const Text(
-              "Upload Files",
+            children: [
+              const Text(
+                "Upload Files",
 
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
-            ),
 
-            const SizedBox(height: 10),
+              const SizedBox(height: 10),
 
-            const Text(
-              "Select a PDF file to upload to Cloud Guard",
+              const Text(
+                "Select a PDF file to upload to Cloud Guard",
 
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 16,
+                style: TextStyle(color: Colors.grey, fontSize: 16),
               ),
-            ),
 
-            const SizedBox(height: 30),
+              const SizedBox(height: 30),
 
-            // =================================================
-            // CHOOSE FILE CARD
-            // =================================================
-
-            Card(
-              elevation: 5,
-
-              child: SizedBox(
-                width: double.infinity,
-                height: 220,
-
-                child: Column(
-                  mainAxisAlignment:
-                      MainAxisAlignment.center,
-
-                  children: [
-                    const Icon(
-                      Icons.cloud_upload,
-                      size: 55,
-                      color: Colors.blue,
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    const Text(
-                      "Select a PDF to upload",
-
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    ElevatedButton.icon(
-                      onPressed:
-                          isUploading
-                              ? null
-                              : pickFile,
-
-                      icon: const Icon(
-                        Icons.upload_file,
-                      ),
-
-                      label: const Text(
-                        "Choose PDF",
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 25),
-
-            // =================================================
-            // SELECTED FILE
-            // =================================================
-
-            if (selectedFileName != null)
+              // =================================================
+              // CHOOSE FILE CARD
+              // =================================================
               Card(
-                child: ListTile(
-                  leading: const Icon(
-                    Icons.picture_as_pdf,
-                    color: Colors.red,
-                    size: 35,
-                  ),
+                elevation: 5,
 
-                  title: Text(
-                    selectedFileName!,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 220,
 
-                  subtitle: Text(
-                    getFileSize(),
-                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
 
-                  trailing: const Icon(
-                    Icons.check_circle,
-                    color: Colors.green,
-                  ),
-                ),
-              ),
+                    children: [
+                      const Icon(
+                        Icons.cloud_upload,
+                        size: 55,
+                        color: Colors.blue,
+                      ),
 
-            const SizedBox(height: 20),
+                      const SizedBox(height: 15),
 
-            // =================================================
-            // UPLOAD BUTTON
-            // =================================================
+                      const Text(
+                        "Select a PDF to upload",
 
-            if (selectedFile != null)
-              SizedBox(
-                width: double.infinity,
-                height: 55,
-
-                child: ElevatedButton.icon(
-                  onPressed:
-                      isUploading
-                          ? null
-                          : uploadFile,
-
-                  icon: isUploading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-
-                          child:
-                              CircularProgressIndicator(
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : const Icon(
-                          Icons.cloud_upload,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
+                      ),
 
-                  label: Text(
-                    isUploading
-                        ? "Uploading..."
-                        : "Upload to Cloud",
+                      const SizedBox(height: 15),
+
+                      ElevatedButton.icon(
+                        onPressed: isSelectingFile ? null : pickFile,
+                        icon: isSelectingFile
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.upload_file),
+                        label: Text(
+                          isSelectingFile ? "Selecting..." : "Choose PDF",
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
 
-            // =================================================
-            // PROGRESS
-            // =================================================
+              const SizedBox(height: 25),
 
-            if (isUploading) ...[
+              // =================================================
+              // SELECTED FILE
+              // =================================================
+              if (selectedFileName != null)
+                Card(
+                  child: ListTile(
+                    leading: const Icon(
+                      Icons.picture_as_pdf,
+                      color: Colors.red,
+                      size: 35,
+                    ),
+
+                    title: Text(
+                      selectedFileName!,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+
+                    subtitle: Text(getFileSize()),
+
+                    trailing: IconButton(
+                      tooltip: "Remove selected file",
+                      onPressed: removeSelection,
+                      icon: const Icon(Icons.close, color: Colors.grey),
+                    ),
+                  ),
+                ),
+
               const SizedBox(height: 20),
 
-              LinearProgressIndicator(
-                value: uploadProgress,
+              // =================================================
+              // UPLOAD BUTTON
+              // =================================================
+              if (selectedFile != null)
+                SizedBox(
+                  width: double.infinity,
+                  height: 55,
+
+                  child: ElevatedButton.icon(
+                    onPressed: showStorageUnavailable,
+                    icon: const Icon(Icons.cloud_upload),
+                    label: const Text("Upload to Cloud"),
+                  ),
+                ),
+
+              if (selectedFile != null) ...[
+                const SizedBox(height: 15),
+                const Text(
+                  "Cloud upload is unavailable because Firebase Storage is not configured or enabled.",
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ],
+
+              const SizedBox(height: 25),
+
+              // =================================================
+              // RECENT UPLOADS
+              // =================================================
+              const Text(
+                "Recent Uploads",
+
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
 
-              Center(
-                child: Text(
-                  "${(uploadProgress * 100).toStringAsFixed(0)}%",
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+
+                  title: const Text("report.pdf"),
+
+                  subtitle: const Text("Demo file"),
+
+                  trailing: const Icon(Icons.check_circle, color: Colors.green),
                 ),
               ),
             ],
-
-            const SizedBox(height: 25),
-
-            // =================================================
-            // RECENT UPLOADS
-            // =================================================
-
-            const Text(
-              "Recent Uploads",
-
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            Card(
-              child: ListTile(
-                leading: const Icon(
-                  Icons.picture_as_pdf,
-                  color: Colors.red,
-                ),
-
-                title: const Text(
-                  "report.pdf",
-                ),
-
-                subtitle: const Text(
-                  "Demo file",
-                ),
-
-                trailing: const Icon(
-                  Icons.check_circle,
-                  color: Colors.green,
-                ),
-              ),
-            ),
-          ],
           ),
         ),
       ),
