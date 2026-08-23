@@ -1,22 +1,49 @@
 # ☁️ Cloud Guard
 
-Cloud Guard is a Flutter-based cloud security and file management application built with Flutter, Dart and Firebase.
+Cloud Guard is a Flutter-based cloud security dashboard and file-management MVP built with Dart and Firebase. It provides Firebase Authentication, account-security tools, responsive dashboard screens, and safe local PDF selection and validation.
 
-## Features
+## Project Status
 
-- 🔐 Email and password authentication
-- 📝 User registration and login
-- 🔑 Forgot password and password reset
-- 👁️ Password visibility
-- 🏠 Cloud security dashboard
-- 🛡️ Security status and security score
-- ⚙️ Account and security settings
-- 👤 Logged-in user information
-- 📁 File picker and file selection
-- 📄 PDF file support
-- ☁️ Firebase Storage integration
+Cloud Guard is currently in MVP development.
 
-## Main Pages
+- Firebase Authentication and auth-state routing are working.
+- The dashboard, security, storage, settings, and account-security screens are implemented.
+- Responsive scrolling, narrow-width layout handling, keyboard-aware form spacing, and long-text handling are complete.
+- Local PDF selection and validation are working.
+
+> **Firebase Storage is not currently enabled or configured for live uploads.** The app does not upload files to the cloud, and it does not simulate upload progress or upload success.
+
+## Completed Features
+
+### Authentication and account security
+
+- Email/password account registration and login
+- Authentication-state routing between login and the signed-in dashboard
+- Logout
+- Forgot-password and password-reset email flow
+- Password visibility controls
+- Validation and clear authentication error messages
+- Logged-in email display and account-security settings
+
+### Responsive interface
+
+- Scrollable content on constrained-height screens
+- Narrow-width fallback for dashboard quick actions
+- Keyboard-aware bottom spacing on login and signup forms
+- Long email addresses and selected filenames truncate safely
+
+### Local PDF selection and validation
+
+- Cross-platform file selection with `file_picker`
+- `.pdf` extension validation
+- `%PDF-` signature validation when file bytes are available
+- 10 MB maximum PDF file size
+- Safe picker-cancellation handling that preserves an existing selection
+- Selected filename and size display
+- Remove-selection action
+- Clear message explaining that cloud uploads are unavailable
+
+## Current Screens
 
 - Login
 - Signup
@@ -27,36 +54,59 @@ Cloud Guard is a Flutter-based cloud security and file management application bu
 - Settings
 - Security Settings
 
-## Technology
+## Upload Behavior and Known Limitation
+
+The Upload Files screen currently supports selecting and validating a PDF locally. After a valid file is selected, the interface clearly reports that cloud upload is unavailable because Firebase Storage is not configured or enabled.
+
+No Firebase Storage request is made, and the app never reports a file as uploaded or displays simulated upload progress. The recent-upload item is a demo UI entry, not a live Storage listing.
+
+## Technology Stack
 
 - Flutter
 - Dart
+- Firebase Core
 - Firebase Authentication
-- Firebase Storage
-- Flutter Web
+- `file_picker`
+- Firebase Storage dependency for future integration only; no live Storage upload is active
 
-## Firebase
+## Prerequisites
 
-Cloud Guard uses Firebase Authentication for user accounts, login, logout and password recovery.
+- Flutter SDK compatible with the version specified in `pubspec.yaml`
+- A Firebase project configured for this app
+- Firebase Authentication enabled with the Email/Password provider
 
-Firebase Storage is integrated for cloud file storage and file upload functionality is currently under development.
+Firebase Storage, a Storage bucket, billing setup, and Storage rules are not required for the current local PDF-selection flow.
 
-## Run the App
+## Setup and Run
 
 Install dependencies:
 
-    flutter pub get
+```bash
+flutter pub get
+```
 
 Run the application:
 
-    flutter run
+```bash
+flutter run
+```
 
 Run the web version in Chrome:
 
-    flutter run -d chrome
+```bash
+flutter run -d chrome
+```
 
-## Project Status
+Run static analysis:
 
-Cloud Guard is currently in **MVP development**.
+```bash
+flutter analyze
+```
 
-Authentication, dashboard, settings, security settings and file selection are working. Firebase Storage file uploading is currently under development.
+## Future Roadmap
+
+- Enable and configure Firebase Storage when project and billing requirements allow
+- Add authenticated live uploads, real transfer progress, and upload cancellation
+- Define and deploy appropriate Firebase Storage security rules
+- Replace the demo recent-upload item with per-user cloud file listings
+- Add automated tests for authentication, PDF validation, picker cancellation, and responsive layouts
