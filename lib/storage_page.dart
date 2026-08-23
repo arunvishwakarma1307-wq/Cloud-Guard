@@ -18,11 +18,11 @@ class StoragePage extends StatelessWidget {
       ),
 
 
-      body: Padding(
-
-        padding: const EdgeInsets.all(20),
-
-        child: Column(
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
 
           crossAxisAlignment: CrossAxisAlignment.start,
 
@@ -99,6 +99,7 @@ class StoragePage extends StatelessWidget {
 
 
           ],
+          ),
         ),
       ),
     );

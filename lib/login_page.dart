@@ -151,7 +151,12 @@ class _LoginPageState extends State<LoginPage> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(25),
+            padding: EdgeInsets.fromLTRB(
+              25,
+              25,
+              25,
+              25 + MediaQuery.viewInsetsOf(context).bottom,
+            ),
 
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -321,9 +326,9 @@ class _LoginPageState extends State<LoginPage> {
                 // CREATE ACCOUNT
                 // =================================================
 
-                Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.center,
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
 
                   children: [
                     const Text(

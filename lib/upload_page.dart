@@ -190,10 +190,11 @@ class _UploadPageState extends State<UploadPage> {
         ),
       ),
 
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-
-        child: Column(
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
           crossAxisAlignment:
               CrossAxisAlignment.start,
 
@@ -291,10 +292,11 @@ class _UploadPageState extends State<UploadPage> {
 
                   title: Text(
                     selectedFileName!,
-
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
 
                   subtitle: Text(
@@ -409,6 +411,7 @@ class _UploadPageState extends State<UploadPage> {
               ),
             ),
           ],
+          ),
         ),
       ),
     );

@@ -30,10 +30,15 @@ class CloudGuardHome extends StatelessWidget {
         ),
       ),
 
-      body: Padding(
-        padding: const EdgeInsets.all(20),
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final useSingleColumnActions = constraints.maxWidth < 360;
 
-        child: Column(
+              return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
 
           children: [
@@ -159,8 +164,34 @@ class CloudGuardHome extends StatelessWidget {
 
             const SizedBox(height: 15),
 
-            Row(
-              children: [
+            useSingleColumnActions
+                ? Column(
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        child: ActionCard(
+                          icon: Icons.storage,
+                          title: "Storage",
+                          onTap: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => const StoragePage()));
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ActionCard(
+                          icon: Icons.security,
+                          title: "Security",
+                          onTap: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => const SecurityPage()));
+                          },
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    children: [
                 Expanded(
                   child: ActionCard(
                     icon: Icons.storage,
@@ -196,13 +227,39 @@ class CloudGuardHome extends StatelessWidget {
                     },
                   ),
                 ),
-              ],
-            ),
+                    ],
+                  ),
 
             const SizedBox(height: 15),
 
-            Row(
-              children: [
+            useSingleColumnActions
+                ? Column(
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        child: ActionCard(
+                          icon: Icons.cloud_upload,
+                          title: "Upload",
+                          onTap: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => const UploadPage()));
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ActionCard(
+                          icon: Icons.settings,
+                          title: "Settings",
+                          onTap: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsPage()));
+                          },
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    children: [
                 Expanded(
                   child: ActionCard(
                     icon: Icons.cloud_upload,
@@ -238,8 +295,8 @@ class CloudGuardHome extends StatelessWidget {
                     },
                   ),
                 ),
-              ],
-            ),
+                    ],
+                  ),
 
             const SizedBox(height: 25),
 
@@ -262,6 +319,9 @@ class CloudGuardHome extends StatelessWidget {
               ),
             ),
           ],
+        );
+            },
+          ),
         ),
       ),
     );

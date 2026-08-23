@@ -114,7 +114,12 @@ class _SignupPageState extends State<SignupPage> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(25),
+            padding: EdgeInsets.fromLTRB(
+              25,
+              25,
+              25,
+              25 + MediaQuery.viewInsetsOf(context).bottom,
+            ),
 
             child: Column(
               children: [

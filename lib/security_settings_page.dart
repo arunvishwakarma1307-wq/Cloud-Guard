@@ -62,10 +62,11 @@ class SecuritySettingsPage extends StatelessWidget {
         elevation: 0,
       ),
 
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-
-        child: Column(
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
 
           children: [
@@ -119,6 +120,8 @@ class SecuritySettingsPage extends StatelessWidget {
 
                 subtitle: Text(
                   user?.email ?? "No email",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),
@@ -142,6 +145,7 @@ class SecuritySettingsPage extends StatelessWidget {
               ),
             ),
           ],
+          ),
         ),
       ),
     );

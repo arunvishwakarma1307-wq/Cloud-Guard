@@ -28,10 +28,15 @@ class SettingsPage extends StatelessWidget {
         elevation: 0,
       ),
 
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-
-        child: Column(
+      body: SafeArea(
+        top: false,
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight - 40),
+              child: IntrinsicHeight(
+                child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
 
           children: [
@@ -58,6 +63,8 @@ class SettingsPage extends StatelessWidget {
 
                 subtitle: Text(
                   user?.email ?? "No email",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),
@@ -154,6 +161,10 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
           ],
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
