@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class SecuritySettingsPage extends StatelessWidget {
+import 'security_status.dart';
+
+class SecuritySettingsPage extends StatefulWidget {
   const SecuritySettingsPage({super.key});
+
+  @override
+  State<SecuritySettingsPage> createState() => _SecuritySettingsPageState();
+}
+
+class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
+  bool isResettingPassword = false;
 
   void showMessage(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -13,6 +22,8 @@ class SecuritySettingsPage extends StatelessWidget {
   }
 
   Future<void> changePassword(BuildContext context) async {
+    if (isResettingPassword) return;
+
     final user = FirebaseAuth.instance.currentUser;
 
     if (user?.email == null) {
@@ -22,6 +33,10 @@ class SecuritySettingsPage extends StatelessWidget {
       );
       return;
     }
+
+    setState(() {
+      isResettingPassword = true;
+    });
 
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(
@@ -41,12 +56,27 @@ class SecuritySettingsPage extends StatelessWidget {
         context,
         "Password reset failed: ${e.message ?? "Unknown error"}",
       );
+    } finally {
+      if (context.mounted) {
+        setState(() {
+          isResettingPassword = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
+    final securitySummary = SecuritySetupSummary.fromAccount(
+      isSignedIn: user != null,
+      email: user?.email,
+      providerIds: user?.providerData
+              .map((provider) => provider.providerId)
+              .toList() ??
+          const [],
+      isEmailVerified: user?.emailVerified ?? false,
+    );
 
     return Scaffold(
       backgroundColor: const Color(0xfff6f8ff),
@@ -95,13 +125,15 @@ class SecuritySettingsPage extends StatelessWidget {
                   "Send password reset link",
                 ),
 
-                trailing: const Icon(
-                  Icons.arrow_forward_ios,
-                ),
+                trailing: isResettingPassword
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.arrow_forward_ios),
 
-                onTap: () {
-                  changePassword(context);
-                },
+                onTap: isResettingPassword ? null : () => changePassword(context),
               ),
             ),
 
@@ -135,12 +167,12 @@ class SecuritySettingsPage extends StatelessWidget {
                   color: Colors.green,
                 ),
 
-                title: const Text(
-                  "Account Protection",
-                ),
+                title: const Text("Account setup"),
 
-                subtitle: const Text(
-                  "Firebase authentication enabled",
+                subtitle: Text(
+                  '${securitySummary.score}% complete — Firebase account setup, not a risk score',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),

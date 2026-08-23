@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'storage_page.dart';
 import 'security_page.dart';
+import 'security_status.dart';
 import 'upload_page.dart';
 import 'settings_page.dart';
 
@@ -15,6 +16,17 @@ class CloudGuardHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    final securitySummary = SecuritySetupSummary.fromAccount(
+      isSignedIn: user != null,
+      email: user?.email,
+      providerIds: user?.providerData
+              .map((provider) => provider.providerId)
+              .toList() ??
+          const [],
+      isEmailVerified: user?.emailVerified ?? false,
+    );
+
     return Scaffold(
       backgroundColor: const Color(0xfff6f8ff),
 
@@ -68,8 +80,8 @@ class CloudGuardHome extends StatelessWidget {
                 borderRadius: BorderRadius.circular(25),
               ),
 
-              child: const Padding(
-                padding: EdgeInsets.all(25),
+              child: Padding(
+                padding: const EdgeInsets.all(25),
 
                 child: Row(
                   children: [
@@ -79,8 +91,8 @@ class CloudGuardHome extends StatelessWidget {
                             CrossAxisAlignment.start,
 
                         children: [
-                          Text(
-                            "Cloud Status",
+                          const Text(
+                            "Firebase Account",
                             style: TextStyle(
                               color: Colors.white70,
                             ),
@@ -89,7 +101,7 @@ class CloudGuardHome extends StatelessWidget {
                           SizedBox(height: 10),
 
                           Text(
-                            "System Secure",
+                            securitySummary.label,
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 25,
@@ -99,8 +111,8 @@ class CloudGuardHome extends StatelessWidget {
 
                           SizedBox(height: 5),
 
-                          Text(
-                            "All cloud services are running normally",
+                          const Text(
+                            "Account information from Firebase Authentication",
                             style: TextStyle(
                               color: Colors.white70,
                             ),
@@ -109,7 +121,7 @@ class CloudGuardHome extends StatelessWidget {
                       ),
                     ),
 
-                    Icon(
+                    const Icon(
                       Icons.check_circle,
                       color: Colors.white,
                       size: 35,
@@ -131,23 +143,23 @@ class CloudGuardHome extends StatelessWidget {
 
             const SizedBox(height: 10),
 
-            const Card(
+            Card(
               child: ListTile(
-                leading: Icon(
+                leading: const Icon(
                   Icons.security,
                   color: Colors.green,
                 ),
 
                 title: Text(
-                  "92%",
+                  "${securitySummary.score}%",
                   style: TextStyle(
                     fontSize: 25,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
 
-                subtitle: Text(
-                  "Security Health",
+                subtitle: const Text(
+                  "Firebase account setup — not a risk score",
                 ),
               ),
             ),
