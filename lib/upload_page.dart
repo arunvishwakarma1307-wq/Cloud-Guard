@@ -314,13 +314,13 @@ class _UploadPageState extends State<UploadPage> {
 
               Card(
                 child: ListTile(
-                  leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+                  leading: const Icon(Icons.info_outline, color: Colors.grey),
 
-                  title: const Text("report.pdf"),
+                  title: const Text("No recent cloud uploads"),
 
-                  subtitle: const Text("Demo file"),
-
-                  trailing: const Icon(Icons.check_circle, color: Colors.green),
+                  subtitle: const Text(
+                    "Live cloud listings and cloud uploads are unavailable because Firebase Storage is not enabled or configured.",
+                  ),
                 ),
               ),
             ],

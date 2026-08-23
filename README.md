@@ -4,7 +4,7 @@ Cloud Guard is a Flutter-based cloud security dashboard and file-management MVP 
 
 ## Project Status
 
-Cloud Guard is currently in **MVP development**. Authentication, authentication-state routing, responsive layouts, local PDF selection and validation, and the account-security presentation are working and tested.
+Cloud Guard is currently in **MVP development**. Authentication, authentication-state routing, responsive layouts, local PDF selection and validation, the account-security presentation, and honest Storage/Recent Uploads empty states are working and tested.
 
 > **Firebase Storage is not currently enabled or configured for live uploads.** The app does not upload files to the cloud, and it does not simulate upload progress or upload success.
 
@@ -40,6 +40,11 @@ Cloud Guard is currently in **MVP development**. Authentication, authentication-
 - Remove-selection action.
 - Clear messaging when cloud uploads are unavailable.
 
+### Honest Storage and Recent Uploads empty states
+
+- Storage Overview and Recent Uploads no longer show fake quota values or placeholder cloud files.
+- Both screens use unavailable/empty states that explain Firebase Storage is not enabled or configured.
+
 ### Truthful account-security summary
 
 - Home Dashboard and Security Center use the same Firebase-derived account-setup summary.
@@ -65,7 +70,11 @@ Cloud Guard is currently in **MVP development**. Authentication, authentication-
 
 The Upload Files screen currently supports selecting and validating a PDF locally. After a valid file is selected, the interface clearly reports that cloud upload is unavailable because Firebase Storage is not configured or enabled.
 
-No Firebase Storage request is made, and the app never reports a file as uploaded or displays simulated upload progress. The recent-upload item is a demo UI entry, not a live Storage listing.
+No Firebase Storage request is made, and the app never reports a file as uploaded or displays simulated upload progress. Recent Uploads is an honest empty state: live cloud listings and cloud uploads are unavailable because Firebase Storage is not enabled or configured.
+
+## Storage Behavior and Known Limitation
+
+The Storage Overview screen does not show fabricated used/total space or placeholder files. It states that cloud storage and live cloud listings are unavailable because Firebase Storage is not enabled or configured. Cloud Guard does not invent stored files or used space.
 
 ## Security Behavior and Known Limitation
 
@@ -138,7 +147,7 @@ For a new feature, inspect the relevant files first, make a small scoped change,
 1. Enable and configure Firebase Storage when project and billing requirements allow.
 2. Add authenticated live uploads with real transfer progress and cancellation.
 3. Define and deploy appropriate Firebase Storage security rules.
-4. Replace the demo recent-upload item with per-user cloud file listings.
+4. When Firebase Storage is enabled, replace the Storage and Recent Uploads empty states with per-user live cloud listings.
 5. Add download, delete, rename, and search functionality.
 6. Add broader automated tests for authentication, PDF validation, picker cancellation, responsive layouts, and account-security presentation.
 7. Replace presentation-only security values with additional clearly defined, measurable checks when reliable data sources are available.
@@ -150,6 +159,7 @@ For a new feature, inspect the relevant files first, make a small scoped change,
 - **Task 2:** Added safe scrolling, narrow-width fallbacks, keyboard-aware spacing, and long-text handling.
 - **Task 3:** Replaced the web-only PDF picker with cross-platform local selection and validation while keeping live cloud upload disabled until Firebase Storage is available.
 - **Security task:** Replaced unsupported security claims with a truthful Firebase account-setup summary, added shared status logic, improved password-reset feedback, and added unit tests.
+- **Storage honesty task:** Replaced fabricated storage quota and demo cloud-file/recent-upload entries with unavailable/empty states that explain Firebase Storage is not enabled or configured.
 
 ## Contributing
 

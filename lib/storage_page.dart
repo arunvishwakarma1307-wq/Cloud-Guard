@@ -63,7 +63,7 @@ class StoragePage extends StatelessWidget {
 
 
                 subtitle: const Text(
-                  "45 GB used / 100 GB total",
+                  "Cloud storage is unavailable because Firebase Storage is not enabled or configured.",
                 ),
 
               ),
@@ -84,16 +84,11 @@ class StoragePage extends StatelessWidget {
 
             Card(
               child: ListTile(
-                leading: Icon(Icons.picture_as_pdf),
-                title: Text("report.pdf"),
-              ),
-            ),
-
-
-            Card(
-              child: ListTile(
-                leading: Icon(Icons.folder),
-                title: Text("Backup Folder"),
+                leading: const Icon(Icons.info_outline),
+                title: const Text("No cloud files to show"),
+                subtitle: const Text(
+                  "Live cloud listings are unavailable because Firebase Storage is not enabled or configured. Cloud Guard does not invent stored files or used space.",
+                ),
               ),
             ),
 
