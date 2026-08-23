@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
+import 'pdf_file_validation.dart';
+
 class UploadPage extends StatefulWidget {
   const UploadPage({super.key});
 
@@ -11,8 +13,6 @@ class UploadPage extends StatefulWidget {
 }
 
 class _UploadPageState extends State<UploadPage> {
-  static const int maxPdfFileSizeBytes = 10 * 1024 * 1024;
-
   String? selectedFileName;
   int? selectedFileSize;
 
@@ -39,7 +39,18 @@ class _UploadPageState extends State<UploadPage> {
       }
 
       final fileSize = await file.length();
-      final validationMessage = await validatePdfFile(file, fileSize);
+      Uint8List? bytes;
+      try {
+        bytes = await file.readAsBytes();
+      } catch (_) {
+        // Some platforms do not expose file bytes until a later operation.
+      }
+
+      final validationMessage = validatePdfFile(
+        fileName: file.name,
+        fileSize: fileSize,
+        bytes: bytes,
+      );
 
       if (validationMessage != null) {
         showMessage(validationMessage);
@@ -62,48 +73,6 @@ class _UploadPageState extends State<UploadPage> {
         });
       }
     }
-  }
-
-  // =====================================================
-  // FILE VALIDATION
-  // =====================================================
-
-  Future<String?> validatePdfFile(PlatformFile file, int fileSize) async {
-    if (!file.name.toLowerCase().endsWith('.pdf')) {
-      return "Please choose a PDF file";
-    }
-
-    if (fileSize > maxPdfFileSizeBytes) {
-      return "PDF files must be 10 MB or smaller";
-    }
-
-    try {
-      final bytes = await file.readAsBytes();
-
-      if (!hasPdfSignature(bytes)) {
-        return "The selected file is not a valid PDF";
-      }
-    } catch (_) {
-      // Some platforms do not expose file bytes until a later operation.
-    }
-
-    return null;
-  }
-
-  bool hasPdfSignature(Uint8List bytes) {
-    const pdfSignature = [0x25, 0x50, 0x44, 0x46, 0x2D];
-
-    if (bytes.length < pdfSignature.length) {
-      return false;
-    }
-
-    for (var index = 0; index < pdfSignature.length; index++) {
-      if (bytes[index] != pdfSignature[index]) {
-        return false;
-      }
-    }
-
-    return true;
   }
 
   void removeSelection() {

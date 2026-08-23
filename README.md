@@ -39,6 +39,7 @@ Cloud Guard is currently in **MVP development**. Authentication, authentication-
 - Selected filename and size display.
 - Remove-selection action.
 - Clear messaging when cloud uploads are unavailable.
+- Filename, size, and `%PDF-` checks live in a pure testable module.
 
 ### Honest Storage and Recent Uploads empty states
 
@@ -132,6 +133,12 @@ Run the account-security unit tests:
 flutter test test/security_status_test.dart
 ~~~
 
+Run the PDF validation unit tests:
+
+~~~bash
+flutter test test/pdf_file_validation_test.dart
+~~~
+
 ## Development Workflow
 
 Before making changes, check the working tree:
@@ -149,17 +156,18 @@ For a new feature, inspect the relevant files first, make a small scoped change,
 3. Define and deploy appropriate Firebase Storage security rules.
 4. When Firebase Storage is enabled, replace the Storage and Recent Uploads empty states with per-user live cloud listings.
 5. Add download, delete, rename, and search functionality.
-6. Add broader automated tests for authentication, PDF validation, picker cancellation, responsive layouts, and account-security presentation.
+6. Add broader automated tests for authentication, picker cancellation, responsive layouts, and account-security presentation. PDF validation unit tests are in place.
 7. Replace presentation-only security values with additional clearly defined, measurable checks when reliable data sources are available.
 8. Improve app branding, privacy information, and release configuration.
 
 ## Project History
 
-- **Task 1:** Added Firebase authentication-state startup and logout routing; removed duplicate dashboard code.
-- **Task 2:** Added safe scrolling, narrow-width fallbacks, keyboard-aware spacing, and long-text handling.
-- **Task 3:** Replaced the web-only PDF picker with cross-platform local selection and validation while keeping live cloud upload disabled until Firebase Storage is available.
-- **Security task:** Replaced unsupported security claims with a truthful Firebase account-setup summary, added shared status logic, improved password-reset feedback, and added unit tests.
-- **Storage honesty task:** Replaced fabricated storage quota and demo cloud-file/recent-upload entries with unavailable/empty states that explain Firebase Storage is not enabled or configured.
+- **Task 1:** Firebase authentication-state routing and logout routing.
+- **Task 2:** Responsive layouts, safe scrolling, narrow-width fallbacks, keyboard-aware spacing, and long-text handling.
+- **Task 3:** Cross-platform local PDF selection and validation with cloud upload kept unavailable.
+- **Task 4:** Truthful Firebase account-security summary, replacing unsupported security claims and adding unit tests.
+- **Storage honesty milestone:** Removed fabricated Storage quota/demo files and replaced them with honest unavailable/empty states because Firebase Storage is not enabled or configured.
+- **Task 5:** Extracted PDF validation into a pure testable module and added focused unit tests.
 
 ## Contributing
 
@@ -167,4 +175,4 @@ Cloud Guard is an MVP under active development. Keep changes focused, preserve e
 
 ## Development Notes
 
-Cloud Guard has been developed with assistance from ChatGPT and OpenAI Codex for code analysis, authentication routing, responsive-layout improvements, PDF validation, security-status modeling, unit-test planning, and documentation. All generated changes were reviewed, tested, and committed by the project owner.
+Cloud Guard has been developed with assistance from ChatGPT, OpenAI Codex, and Cursor for code analysis, authentication routing, responsive-layout improvements, PDF validation, security-status modeling, unit-test planning, and documentation. All generated changes were reviewed, tested, committed, and pushed by the project owner.
