@@ -20,6 +20,7 @@ Cloud Guard is currently in **MVP development**. Authentication, authentication-
 - Validation and clear authentication error messages.
 - Logged-in email display and account-security settings.
 - Password-reset request protection to prevent duplicate requests while one request is in progress.
+- Email verification action for unverified accounts through Firebase Authentication.
 
 ### Responsive interface
 
@@ -174,6 +175,7 @@ For a new feature, inspect the relevant files first, make a small scoped change,
 - **Storage honesty milestone:** Removed fabricated Storage quota/demo files and replaced them with honest unavailable/empty states because Firebase Storage is not enabled or configured.
 - **Task 5:** Extracted PDF validation into a pure testable module and added focused unit tests.
 - **Task 6:** Focused Home Dashboard UI/UX polish for branding, hierarchy, spacing, card consistency, and a decorative account-setup progress indicator.
+- **Task 7:** Added a Firebase Authentication email-verification action with verified/unverified account states, duplicate-request protection, and clear success/error feedback.
 
 ## Contributing
 
