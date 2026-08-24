@@ -33,12 +33,25 @@ class CloudGuardHome extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          "☁ Cloud Guard",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
+        title: const Row(
+          children: [
+            Icon(
+              Icons.cloud,
+              color: Colors.blue,
+            ),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                "Cloud Guard",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
       ),
 
@@ -68,20 +81,21 @@ class CloudGuardHome extends StatelessWidget {
               "Your cloud security dashboard",
               style: TextStyle(
                 color: Colors.grey,
+                fontSize: 16,
               ),
             ),
 
-            const SizedBox(height: 25),
+            const SizedBox(height: 20),
 
             Card(
-              elevation: 8,
+              elevation: 5,
               color: Colors.blue,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(25),
+                borderRadius: BorderRadius.circular(20),
               ),
 
               child: Padding(
-                padding: const EdgeInsets.all(25),
+                padding: const EdgeInsets.all(20),
 
                 child: Row(
                   children: [
@@ -121,8 +135,10 @@ class CloudGuardHome extends StatelessWidget {
                       ),
                     ),
 
-                    const Icon(
-                      Icons.check_circle,
+                    Icon(
+                      securitySummary.score == 100
+                          ? Icons.check_circle
+                          : Icons.info_outline,
                       color: Colors.white,
                       size: 35,
                     ),
@@ -131,7 +147,7 @@ class CloudGuardHome extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 25),
+            const SizedBox(height: 20),
 
             const Text(
               "Security Score",
@@ -141,30 +157,52 @@ class CloudGuardHome extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 10),
+            const SizedBox(height: 16),
 
             Card(
-              child: ListTile(
-                leading: const Icon(
-                  Icons.security,
-                  color: Colors.green,
-                ),
+              elevation: 5,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(0, 4, 0, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ListTile(
+                      leading: const Icon(
+                        Icons.security,
+                        color: Colors.green,
+                      ),
 
-                title: Text(
-                  "${securitySummary.score}%",
-                  style: TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                      title: Text(
+                        "${securitySummary.score}%",
+                        style: const TextStyle(
+                          fontSize: 25,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
 
-                subtitle: const Text(
-                  "Firebase account setup — not a risk score",
+                      subtitle: const Text(
+                        "Firebase account setup — not a risk score",
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                      child: LinearProgressIndicator(
+                        value: securitySummary.score / 100,
+                        minHeight: 6,
+                        borderRadius: BorderRadius.circular(8),
+                        semanticsLabel:
+                            'Firebase account setup ${securitySummary.score} percent, not a risk score',
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
 
-            const SizedBox(height: 25),
+            const SizedBox(height: 20),
 
             const Text(
               "Quick Actions",
@@ -174,7 +212,7 @@ class CloudGuardHome extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 15),
+            const SizedBox(height: 16),
 
             useSingleColumnActions
                 ? Column(
@@ -189,7 +227,7 @@ class CloudGuardHome extends StatelessWidget {
                           },
                         ),
                       ),
-                      const SizedBox(height: 15),
+                      const SizedBox(height: 16),
                       SizedBox(
                         width: double.infinity,
                         child: ActionCard(
@@ -221,7 +259,7 @@ class CloudGuardHome extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(width: 15),
+                const SizedBox(width: 16),
 
                 Expanded(
                   child: ActionCard(
@@ -242,7 +280,7 @@ class CloudGuardHome extends StatelessWidget {
                     ],
                   ),
 
-            const SizedBox(height: 15),
+            const SizedBox(height: 16),
 
             useSingleColumnActions
                 ? Column(
@@ -257,7 +295,7 @@ class CloudGuardHome extends StatelessWidget {
                           },
                         ),
                       ),
-                      const SizedBox(height: 15),
+                      const SizedBox(height: 16),
                       SizedBox(
                         width: double.infinity,
                         child: ActionCard(
@@ -289,7 +327,7 @@ class CloudGuardHome extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(width: 15),
+                const SizedBox(width: 16),
 
                 Expanded(
                   child: ActionCard(
@@ -310,7 +348,7 @@ class CloudGuardHome extends StatelessWidget {
                     ],
                   ),
 
-            const SizedBox(height: 25),
+            const SizedBox(height: 20),
 
             SizedBox(
               width: double.infinity,

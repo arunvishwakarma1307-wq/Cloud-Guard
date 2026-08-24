@@ -29,6 +29,11 @@ Cloud Guard is currently in **MVP development**. Authentication, authentication-
 - Long email addresses and selected filenames truncate safely.
 - Existing card dimensions, colors, labels, and navigation preserved.
 
+### Home Dashboard visual polish
+
+- Home Dashboard branding, spacing, typography, and card consistency were tightened without changing navigation, logout, or account-setup wording.
+- A decorative account-setup progress bar was added; it is not a risk, threat, or security-health score.
+
 ### Local PDF selection and validation
 
 - Cross-platform file selection with `file_picker`.
@@ -168,6 +173,7 @@ For a new feature, inspect the relevant files first, make a small scoped change,
 - **Task 4:** Truthful Firebase account-security summary, replacing unsupported security claims and adding unit tests.
 - **Storage honesty milestone:** Removed fabricated Storage quota/demo files and replaced them with honest unavailable/empty states because Firebase Storage is not enabled or configured.
 - **Task 5:** Extracted PDF validation into a pure testable module and added focused unit tests.
+- **Task 6:** Focused Home Dashboard UI/UX polish for branding, hierarchy, spacing, card consistency, and a decorative account-setup progress indicator.
 
 ## Contributing
 
