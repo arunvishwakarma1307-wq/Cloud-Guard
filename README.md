@@ -46,6 +46,7 @@ Cloud Guard is currently in **MVP development**. Authentication, authentication-
 - Remove-selection action.
 - Clear messaging when cloud uploads are unavailable.
 - Filename, size, and `%PDF-` checks live in a pure testable module.
+- A selected valid PDF shows a clear local-validation status; this does not indicate cloud upload.
 
 ### Honest Storage and Recent Uploads empty states
 
@@ -176,6 +177,7 @@ For a new feature, inspect the relevant files first, make a small scoped change,
 - **Task 5:** Extracted PDF validation into a pure testable module and added focused unit tests.
 - **Task 6:** Focused Home Dashboard UI/UX polish for branding, hierarchy, spacing, card consistency, and a decorative account-setup progress indicator.
 - **Task 7:** Added a Firebase Authentication email-verification action with verified/unverified account states, duplicate-request protection, and clear success/error feedback.
+- **Task 8:** Added a clear local PDF validation-readiness status and local-only explanation without enabling Firebase Storage or changing cloud-upload behavior.
 
 ## Contributing
 

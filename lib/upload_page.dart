@@ -134,64 +134,45 @@ class _UploadPageState extends State<UploadPage> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-
       body: SafeArea(
         top: false,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-
             children: [
               const Text(
                 "Upload Files",
-
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
-
               const SizedBox(height: 10),
-
               const Text(
                 "Select a PDF file to upload to Cloud Guard",
-
                 style: TextStyle(color: Colors.grey, fontSize: 16),
               ),
-
               const SizedBox(height: 30),
-
-              // =================================================
-              // CHOOSE FILE CARD
-              // =================================================
               Card(
                 elevation: 5,
-
                 child: SizedBox(
                   width: double.infinity,
                   height: 220,
-
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-
                     children: [
                       const Icon(
                         Icons.cloud_upload,
                         size: 55,
                         color: Colors.blue,
                       ),
-
                       const SizedBox(height: 15),
-
                       const Text(
                         "Select a PDF to upload",
-
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-
                       const SizedBox(height: 15),
-
                       ElevatedButton.icon(
                         onPressed: isSelectingFile ? null : pickFile,
                         icon: isSelectingFile
@@ -211,12 +192,7 @@ class _UploadPageState extends State<UploadPage> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 25),
-
-              // =================================================
-              // SELECTED FILE
-              // =================================================
               if (selectedFileName != null)
                 Card(
                   child: ListTile(
@@ -225,16 +201,37 @@ class _UploadPageState extends State<UploadPage> {
                       color: Colors.red,
                       size: 35,
                     ),
-
                     title: Text(
                       selectedFileName!,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-
-                    subtitle: Text(getFileSize()),
-
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(getFileSize()),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.check_circle,
+                              color: Colors.green,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              "PDF validated locally",
+                              style: TextStyle(
+                                color: Colors.green.shade700,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                     trailing: IconButton(
                       tooltip: "Remove selected file",
                       onPressed: removeSelection,
@@ -242,24 +239,27 @@ class _UploadPageState extends State<UploadPage> {
                     ),
                   ),
                 ),
-
+              if (selectedFileName != null) ...[
+                const SizedBox(height: 8),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    "This file is available locally; cloud upload is unavailable until Firebase Storage is enabled.",
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+              ],
               const SizedBox(height: 20),
-
-              // =================================================
-              // UPLOAD BUTTON
-              // =================================================
               if (selectedFile != null)
                 SizedBox(
                   width: double.infinity,
                   height: 55,
-
                   child: ElevatedButton.icon(
                     onPressed: showStorageUnavailable,
                     icon: const Icon(Icons.cloud_upload),
                     label: const Text("Upload to Cloud"),
                   ),
                 ),
-
               if (selectedFile != null) ...[
                 const SizedBox(height: 15),
                 const Text(
@@ -267,26 +267,16 @@ class _UploadPageState extends State<UploadPage> {
                   style: TextStyle(color: Colors.grey),
                 ),
               ],
-
               const SizedBox(height: 25),
-
-              // =================================================
-              // RECENT UPLOADS
-              // =================================================
               const Text(
                 "Recent Uploads",
-
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-
               const SizedBox(height: 10),
-
               Card(
                 child: ListTile(
                   leading: const Icon(Icons.info_outline, color: Colors.grey),
-
                   title: const Text("No recent cloud uploads"),
-
                   subtitle: const Text(
                     "Live cloud listings and cloud uploads are unavailable because Firebase Storage is not enabled or configured.",
                   ),
