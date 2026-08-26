@@ -60,6 +60,8 @@ Cloud Guard is currently in **MVP development**. Authentication, authentication-
 - Upload Files and Storage screens use the same shared local workspace.
 - Local files show their filename, individual size, total file count, and total size.
 - Local workspace files can be searched and removed.
+- Storage provides local-file sorting by name and size.
+- Storage provides a confirmation-protected Clear All action for temporary local entries.
 - Local workspace unit tests cover adding, duplicate prevention, searching, removing, clearing, and total-size calculation.
 
 ### Truthful account-security summary
@@ -93,7 +95,7 @@ No Firebase Storage request is made, and the app never reports a file as uploade
 
 The Storage Overview screen does not show fabricated used/total space or placeholder files. It states that cloud storage and live cloud listings are unavailable because Firebase Storage is not enabled or configured. Cloud Guard does not invent stored files or used space.
 
-The screen also displays the temporary local workspace with search, total size, and remove actions. These local workspace entries are not cloud files and are not persisted after the app is completely closed or restarted.
+The screen also displays the temporary local workspace with search, sorting, total size, individual remove actions, and a confirmation-protected Clear All action. These local workspace entries are not cloud files and are not persisted after the app is completely closed or restarted.
 
 ## Security Behavior and Known Limitation
 
@@ -224,6 +226,7 @@ For a new feature, inspect the relevant files first, make a small scoped change,
 - **Task 7:** Added a Firebase Authentication email-verification action with verified/unverified account states, duplicate-request protection, and clear success/error feedback.
 - **Task 8:** Added a clear local PDF validation-readiness status and local-only explanation without enabling Firebase Storage or changing cloud-upload behavior.
 - **Task 9:** Added a shared in-memory local file workspace with multi-file support, duplicate prevention, local search, total-size display, and removal actions on Upload Files and Storage screens. Added focused workspace unit tests.
+- **Task 10:** Added local workspace sorting by filename and size, plus a confirmation-protected Clear All action for temporary local files.
 
 ## Contributing
 

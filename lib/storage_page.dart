@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'local_file_workspace.dart';
 
+enum LocalFileSort { nameAscending, sizeAscending, sizeDescending }
+
 class StoragePage extends StatefulWidget {
   const StoragePage({super.key});
 
@@ -12,6 +14,7 @@ class StoragePage extends StatefulWidget {
 class _StoragePageState extends State<StoragePage> {
   final TextEditingController searchController = TextEditingController();
   String searchQuery = '';
+  LocalFileSort sortMode = LocalFileSort.nameAscending;
 
   @override
   void dispose() {
@@ -27,12 +30,72 @@ class _StoragePageState extends State<StoragePage> {
     return '${(size / (1024 * 1024)).toStringAsFixed(2)} MB';
   }
 
+  String sortLabel(LocalFileSort mode) {
+    switch (mode) {
+      case LocalFileSort.nameAscending:
+        return 'Name A-Z';
+      case LocalFileSort.sizeAscending:
+        return 'Size small-large';
+      case LocalFileSort.sizeDescending:
+        return 'Size large-small';
+    }
+  }
+
+  List<LocalPdfEntry> sortedEntries(List<LocalPdfEntry> entries) {
+    final result = List<LocalPdfEntry>.from(entries);
+
+    switch (sortMode) {
+      case LocalFileSort.nameAscending:
+        result.sort(
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
+      case LocalFileSort.sizeAscending:
+        result.sort((a, b) => a.sizeBytes.compareTo(b.sizeBytes));
+      case LocalFileSort.sizeDescending:
+        result.sort((a, b) => b.sizeBytes.compareTo(a.sizeBytes));
+    }
+
+    return result;
+  }
+
   void removeEntry(LocalPdfEntry entry) {
     localFileWorkspace.remove(entry);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('${entry.name} removed from local workspace.')),
     );
+  }
+
+  Future<void> confirmClearAll() async {
+    if (localFileWorkspace.entries.isEmpty) return;
+
+    final shouldClear = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove all local files?'),
+        content: const Text(
+          'This removes only temporary local workspace entries. No cloud files are affected.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Clear All'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldClear == true) {
+      localFileWorkspace.clear();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('All local workspace files removed.')),
+      );
+    }
   }
 
   @override
@@ -78,9 +141,12 @@ class _StoragePageState extends State<StoragePage> {
               AnimatedBuilder(
                 animation: localFileWorkspace,
                 builder: (context, _) {
-                  final entries = localFileWorkspace.search(searchQuery);
+                  final allEntries = localFileWorkspace.entries;
+                  final entries = sortedEntries(
+                    localFileWorkspace.search(searchQuery),
+                  );
 
-                  if (localFileWorkspace.entries.isEmpty) {
+                  if (allEntries.isEmpty) {
                     return const Card(
                       child: ListTile(
                         leading: Icon(Icons.folder_open, color: Colors.grey),
@@ -100,14 +166,24 @@ class _StoragePageState extends State<StoragePage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                '${localFileWorkspace.entries.length} local file${localFileWorkspace.entries.length == 1 ? '' : 's'}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
-                                ),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      '${allEntries.length} local file${allEntries.length == 1 ? '' : 's'}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                  ),
+                                  TextButton.icon(
+                                    onPressed: confirmClearAll,
+                                    icon: const Icon(Icons.delete_sweep),
+                                    label: const Text('Clear All'),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 4),
                               Text(
                                 'Total size: ${formatFileSize(localFileWorkspace.totalSizeBytes)}',
                                 style: const TextStyle(color: Colors.grey),
@@ -137,6 +213,33 @@ class _StoragePageState extends State<StoragePage> {
                                         ),
                                   border: const OutlineInputBorder(),
                                 ),
+                              ),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  const Icon(Icons.sort, size: 20),
+                                  const SizedBox(width: 8),
+                                  const Text('Sort by:'),
+                                  const SizedBox(width: 8),
+                                  DropdownButton<LocalFileSort>(
+                                    value: sortMode,
+                                    isExpanded: false,
+                                    items: LocalFileSort.values
+                                        .map(
+                                          (mode) => DropdownMenuItem(
+                                            value: mode,
+                                            child: Text(sortLabel(mode)),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged: (value) {
+                                      if (value == null) return;
+                                      setState(() {
+                                        sortMode = value;
+                                      });
+                                    },
+                                  ),
+                                ],
                               ),
                             ],
                           ),
