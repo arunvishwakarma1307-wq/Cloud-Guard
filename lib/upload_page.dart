@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
+import 'local_file_workspace.dart';
 import 'pdf_file_validation.dart';
 
 class UploadPage extends StatefulWidget {
@@ -18,10 +19,6 @@ class _UploadPageState extends State<UploadPage> {
 
   PlatformFile? selectedFile;
   bool isSelectingFile = false;
-
-  // =====================================================
-  // CHOOSE FILE
-  // =====================================================
 
   Future<void> pickFile() async {
     setState(() {
@@ -57,11 +54,22 @@ class _UploadPageState extends State<UploadPage> {
         return;
       }
 
+      final added = localFileWorkspace.add(
+        LocalPdfEntry(name: file.name, sizeBytes: fileSize),
+      );
+
+      if (!added) {
+        showMessage("This PDF is already in the local workspace.");
+        return;
+      }
+
       setState(() {
         selectedFile = file;
         selectedFileName = file.name;
         selectedFileSize = fileSize;
       });
+
+      showMessage("PDF added to the local workspace.");
     } catch (_) {
       if (mounted) {
         showMessage("Unable to select a PDF file. Please try again.");
@@ -76,11 +84,32 @@ class _UploadPageState extends State<UploadPage> {
   }
 
   void removeSelection() {
+    final name = selectedFileName;
+    final size = selectedFileSize;
+
+    if (name != null && size != null) {
+      localFileWorkspace.remove(
+        LocalPdfEntry(name: name, sizeBytes: size),
+      );
+    }
+
     setState(() {
       selectedFile = null;
       selectedFileName = null;
       selectedFileSize = null;
     });
+  }
+
+  void removeWorkspaceEntry(LocalPdfEntry entry) {
+    localFileWorkspace.remove(entry);
+
+    if (selectedFileName == entry.name && selectedFileSize == entry.sizeBytes) {
+      setState(() {
+        selectedFile = null;
+        selectedFileName = null;
+        selectedFileSize = null;
+      });
+    }
   }
 
   void showStorageUnavailable() {
@@ -89,41 +118,24 @@ class _UploadPageState extends State<UploadPage> {
     );
   }
 
-  // =====================================================
-  // MESSAGE
-  // =====================================================
-
   void showMessage(String message) {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  // =====================================================
-  // FILE SIZE
-  // =====================================================
-
-  String getFileSize() {
-    if (selectedFileSize == null) {
-      return "";
-    }
-
-    final size = selectedFileSize!;
-
-    if (size < 1024) {
-      return "$size bytes";
-    }
-
+  String formatFileSize(int size) {
+    if (size < 1024) return "$size bytes";
     if (size < 1024 * 1024) {
       return "${(size / 1024).toStringAsFixed(2)} KB";
     }
-
     return "${(size / (1024 * 1024)).toStringAsFixed(2)} MB";
   }
 
-  // =====================================================
-  // UI
-  // =====================================================
+  String getFileSize() {
+    if (selectedFileSize == null) return "";
+    return formatFileSize(selectedFileSize!);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +159,7 @@ class _UploadPageState extends State<UploadPage> {
               ),
               const SizedBox(height: 10),
               const Text(
-                "Select a PDF file to upload to Cloud Guard",
+                "Select PDF files to keep in your local Cloud Guard workspace",
                 style: TextStyle(color: Colors.grey, fontSize: 16),
               ),
               const SizedBox(height: 30),
@@ -166,7 +178,7 @@ class _UploadPageState extends State<UploadPage> {
                       ),
                       const SizedBox(height: 15),
                       const Text(
-                        "Select a PDF to upload",
+                        "Select a PDF to add locally",
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -213,22 +225,12 @@ class _UploadPageState extends State<UploadPage> {
                       children: [
                         Text(getFileSize()),
                         const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.check_circle,
-                              color: Colors.green,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              "PDF validated locally",
-                              style: TextStyle(
-                                color: Colors.green.shade700,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
+                        Text(
+                          "PDF validated locally",
+                          style: TextStyle(
+                            color: Colors.green.shade700,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
@@ -269,15 +271,75 @@ class _UploadPageState extends State<UploadPage> {
               ],
               const SizedBox(height: 25),
               const Text(
+                "Local Workspace",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              AnimatedBuilder(
+                animation: localFileWorkspace,
+                builder: (context, _) {
+                  final entries = localFileWorkspace.entries;
+
+                  if (entries.isEmpty) {
+                    return const Card(
+                      child: ListTile(
+                        leading: Icon(Icons.folder_open, color: Colors.grey),
+                        title: Text("No local files yet"),
+                        subtitle: Text(
+                          "Validated PDFs added here stay in memory on this device. They are not uploaded to Firebase Storage.",
+                        ),
+                      ),
+                    );
+                  }
+
+                  return Card(
+                    child: Column(
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.folder, color: Colors.blue),
+                          title: Text(
+                            "${entries.length} local file${entries.length == 1 ? '' : 's'}",
+                          ),
+                          subtitle: Text(
+                            "Total: ${formatFileSize(localFileWorkspace.totalSizeBytes)}",
+                          ),
+                        ),
+                        ...entries.map(
+                          (entry) => ListTile(
+                            dense: true,
+                            leading: const Icon(
+                              Icons.picture_as_pdf,
+                              color: Colors.red,
+                            ),
+                            title: Text(
+                              entry.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            subtitle: Text(formatFileSize(entry.sizeBytes)),
+                            trailing: IconButton(
+                              tooltip: "Remove local file",
+                              onPressed: () => removeWorkspaceEntry(entry),
+                              icon: const Icon(Icons.delete_outline),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 25),
+              const Text(
                 "Recent Uploads",
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
-              Card(
+              const Card(
                 child: ListTile(
-                  leading: const Icon(Icons.info_outline, color: Colors.grey),
-                  title: const Text("No recent cloud uploads"),
-                  subtitle: const Text(
+                  leading: Icon(Icons.info_outline, color: Colors.grey),
+                  title: Text("No recent cloud uploads"),
+                  subtitle: Text(
                     "Live cloud listings and cloud uploads are unavailable because Firebase Storage is not enabled or configured.",
                   ),
                 ),

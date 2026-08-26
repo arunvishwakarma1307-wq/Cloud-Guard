@@ -1,10 +1,10 @@
 # ☁️ Cloud Guard
 
-Cloud Guard is a Flutter-based cloud security dashboard and file-management MVP built with Dart and Firebase. It provides Firebase Authentication, account-security tools, responsive dashboard screens, and safe local PDF selection and validation.
+Cloud Guard is a Flutter-based cloud security dashboard and file-management MVP built with Dart and Firebase. It provides Firebase Authentication, account-security tools, responsive dashboard screens, and safe local PDF selection, validation, and workspace management.
 
 ## Project Status
 
-Cloud Guard is currently in **MVP development**. Authentication, authentication-state routing, responsive layouts, local PDF selection and validation, the account-security presentation, and honest Storage/Recent Uploads empty states are working and tested.
+Cloud Guard is currently in **MVP development**. Authentication, authentication-state routing, responsive layouts, local PDF selection and validation, the local file workspace, the account-security presentation, and honest Storage/Recent Uploads empty states are working and tested.
 
 > **Firebase Storage is not currently enabled or configured for live uploads.** The app does not upload files to the cloud, and it does not simulate upload progress or upload success.
 
@@ -53,6 +53,15 @@ Cloud Guard is currently in **MVP development**. Authentication, authentication-
 - Storage Overview and Recent Uploads no longer show fake quota values or placeholder cloud files.
 - Both screens use unavailable/empty states that explain Firebase Storage is not enabled or configured.
 
+### Local File Workspace
+
+- Multiple validated PDFs can be added to a temporary in-memory local workspace without Firebase Storage or billing.
+- Duplicate entries with the same filename and file size are prevented.
+- Upload Files and Storage screens use the same shared local workspace.
+- Local files show their filename, individual size, total file count, and total size.
+- Local workspace files can be searched and removed.
+- Local workspace unit tests cover adding, duplicate prevention, searching, removing, clearing, and total-size calculation.
+
 ### Truthful account-security summary
 
 - Home Dashboard and Security Center use the same Firebase-derived account-setup summary.
@@ -76,13 +85,15 @@ Cloud Guard is currently in **MVP development**. Authentication, authentication-
 
 ## Upload Behavior and Known Limitation
 
-The Upload Files screen currently supports selecting and validating a PDF locally. After a valid file is selected, the interface clearly reports that cloud upload is unavailable because Firebase Storage is not configured or enabled.
+The Upload Files screen currently supports selecting and validating PDF files locally. After a valid file is selected, it is added to the shared in-memory local workspace, and the interface clearly reports that cloud upload is unavailable because Firebase Storage is not configured or enabled.
 
 No Firebase Storage request is made, and the app never reports a file as uploaded or displays simulated upload progress. Recent Uploads is an honest empty state: live cloud listings and cloud uploads are unavailable because Firebase Storage is not enabled or configured.
 
 ## Storage Behavior and Known Limitation
 
 The Storage Overview screen does not show fabricated used/total space or placeholder files. It states that cloud storage and live cloud listings are unavailable because Firebase Storage is not enabled or configured. Cloud Guard does not invent stored files or used space.
+
+The screen also displays the temporary local workspace with search, total size, and remove actions. These local workspace entries are not cloud files and are not persisted after the app is completely closed or restarted.
 
 ## Security Behavior and Known Limitation
 
@@ -97,6 +108,7 @@ The account-setup percentage is calculated from four checks: signed-in account, 
 - Firebase Core
 - Firebase Authentication
 - `file_picker`
+- `ChangeNotifier`-based in-memory local file workspace
 - Firebase Storage dependency reserved for future integration; no live Storage upload is active
 - Flutter Web and standard Flutter platform folders
 
@@ -105,8 +117,9 @@ The account-setup percentage is calculated from four checks: signed-in account, 
 - Flutter SDK compatible with the version specified in `pubspec.yaml`.
 - A Firebase project configured for this application.
 - Firebase Authentication enabled with the Email/Password provider.
+- For Android phone testing: a data-capable USB cable and USB debugging enabled on the phone.
 
-Firebase Storage, a Storage bucket, billing setup, and Storage rules are not required for the current local PDF-selection and account-security-summary features.
+Firebase Storage, a Storage bucket, billing setup, and Storage rules are not required for the current local PDF-selection, local-workspace, and account-security-summary features.
 
 ## Setup and Run
 
@@ -128,10 +141,36 @@ Run the Web version in Chrome:
 flutter run -d chrome
 ~~~
 
+Check connected devices:
+
+~~~bash
+flutter devices
+~~~
+
+Run on a connected Android phone:
+
+Enable Developer Options and USB debugging on the phone, connect it with a data-capable USB cable, unlock the phone, select File Transfer if prompted, and allow the USB debugging permission. Then run:
+
+~~~bash
+flutter run -d DEVICE_ID
+~~~
+
+For example, for the connected phone device ID `6daa931e`:
+
+~~~bash
+flutter run -d 6daa931e
+~~~
+
 Run static analysis:
 
 ~~~bash
 flutter analyze
+~~~
+
+Run all tests:
+
+~~~bash
+flutter test
 ~~~
 
 Run the account-security unit tests:
@@ -144,6 +183,12 @@ Run the PDF validation unit tests:
 
 ~~~bash
 flutter test test/pdf_file_validation_test.dart
+~~~
+
+Run the local workspace unit tests:
+
+~~~bash
+flutter test test/local_file_workspace_test.dart
 ~~~
 
 ## Development Workflow
@@ -162,8 +207,8 @@ For a new feature, inspect the relevant files first, make a small scoped change,
 2. Add authenticated live uploads with real transfer progress and cancellation.
 3. Define and deploy appropriate Firebase Storage security rules.
 4. When Firebase Storage is enabled, replace the Storage and Recent Uploads empty states with per-user live cloud listings.
-5. Add download, delete, rename, and search functionality.
-6. Add broader automated tests for authentication, picker cancellation, responsive layouts, and account-security presentation. PDF validation unit tests are in place.
+5. Add download, delete, rename, and search functionality for live cloud files.
+6. Add broader automated tests for authentication, picker cancellation, responsive layouts, and account-security presentation. PDF validation and local workspace unit tests are in place.
 7. Replace presentation-only security values with additional clearly defined, measurable checks when reliable data sources are available.
 8. Improve app branding, privacy information, and release configuration.
 
@@ -178,6 +223,7 @@ For a new feature, inspect the relevant files first, make a small scoped change,
 - **Task 6:** Focused Home Dashboard UI/UX polish for branding, hierarchy, spacing, card consistency, and a decorative account-setup progress indicator.
 - **Task 7:** Added a Firebase Authentication email-verification action with verified/unverified account states, duplicate-request protection, and clear success/error feedback.
 - **Task 8:** Added a clear local PDF validation-readiness status and local-only explanation without enabling Firebase Storage or changing cloud-upload behavior.
+- **Task 9:** Added a shared in-memory local file workspace with multi-file support, duplicate prevention, local search, total-size display, and removal actions on Upload Files and Storage screens. Added focused workspace unit tests.
 
 ## Contributing
 
@@ -185,4 +231,4 @@ Cloud Guard is an MVP under active development. Keep changes focused, preserve e
 
 ## Development Notes
 
-Cloud Guard has been developed with assistance from ChatGPT, OpenAI Codex, and Cursor for code analysis, authentication routing, responsive-layout improvements, PDF validation, security-status modeling, unit-test planning, and documentation. All generated changes were reviewed, tested, committed, and pushed by the project owner.
+Cloud Guard has been developed with assistance from ChatGPT, OpenAI Codex, and Cursor for code analysis, authentication routing, responsive-layout improvements, PDF validation, security-status modeling, local workspace development, unit-test planning, and documentation. All generated changes were reviewed, tested, committed, and pushed by the project owner.
