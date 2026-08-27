@@ -7,9 +7,15 @@
 [![GitHub](https://img.shields.io/badge/GitHub-181717?logo=github&logoColor=white)](https://github.com/)
 [![Android](https://img.shields.io/badge/Android-3DDC84?logo=android&logoColor=white)](https://www.android.com/)
 [![Web](https://img.shields.io/badge/Web-4285F4?logo=googlechrome&logoColor=white)](https://flutter.dev/multi-platform/web/)
-[![Cursor](https://img.shields.io/badge/AI%20Assisted-Cursor-000000?logo=cursor&logoColor=white )](https://cursor.com/ )
-[![Codex](https://img.shields.io/badge/AI%20Assisted-Codex-412991?logo=openai&logoColor=white )](https://openai.com/codex/ )
+[![Cursor](https://img.shields.io/badge/AI%20Assisted-Cursor-000000?logo=cursor&logoColor=white)](https://cursor.com/)
+[![Codex](https://img.shields.io/badge/AI%20Assisted-Codex-412991?logo=openai&logoColor=white)](https://openai.com/codex/)
 
+## Live Demo
+
+👉 https://arunvishwakarma1307-wq.github.io/Cloud-Guard/
+
+
+> The live demo includes local PDF workspace features. Firebase Storage cloud uploads remain unavailable because Storage is not enabled or configured.
 
 Cloud Guard is a Flutter-based cloud security dashboard and file-management MVP built with Dart and Firebase. It provides Firebase Authentication, account-security tools, responsive dashboard screens, and safe local PDF selection, validation, and workspace management.
 
