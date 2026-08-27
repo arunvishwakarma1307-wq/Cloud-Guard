@@ -10,163 +10,173 @@
 [![Cursor](https://img.shields.io/badge/AI%20Assisted-Cursor-000000?logo=cursor&logoColor=white)](https://cursor.com/)
 [![Codex](https://img.shields.io/badge/AI%20Assisted-Codex-412991?logo=openai&logoColor=white)](https://openai.com/codex/)
 
-## Live Demo
+A Flutter-based cloud security and file-management MVP focused on honest account-security information, local PDF validation, and a temporary local file workspace.
 
-👉 https://arunvishwakarma1307-wq.github.io/Cloud-Guard/
+## 🔗 Try Cloud Guard
 
+### 🌐 Web Demo
 
-> The live demo includes local PDF workspace features. Firebase Storage cloud uploads remain unavailable because Storage is not enabled or configured.
+https://arunvishwakarma1307-wq.github.io/Cloud-Guard/
 
-Cloud Guard is a Flutter-based cloud security dashboard and file-management MVP built with Dart and Firebase. It provides Firebase Authentication, account-security tools, responsive dashboard screens, and safe local PDF selection, validation, and workspace management.
+### 📱 Android APK
 
-## Project Status
+https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/download/v1.0.0/app-release.apk
 
-Cloud Guard is currently in **MVP development**. Authentication, authentication-state routing, responsive layouts, local PDF selection and validation, the local file workspace, the account-security presentation, and honest Storage/Recent Uploads empty states are working and tested.
+[View Android Release v1.0.0](https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/tag/v1.0.0)
 
-> **Firebase Storage is not currently enabled or configured for live uploads.** The app does not upload files to the cloud, and it does not simulate upload progress or upload success.
+> Android users: Download the APK, open it from the Downloads folder, allow installation from this source if Android asks for permission, install it, and then open Cloud Guard. Windows users should use the Web Demo because Windows cannot open Android APK files directly.
 
-## Completed Features
+## 📌 Project Status
 
-### Authentication and account security
+Cloud Guard is currently in **MVP development**.
 
-- Email/password account registration and login.
-- Authentication-state routing between the Login page and signed-in dashboard.
-- Logout and session handling.
-- Forgot-password and password-reset email flow through Firebase Authentication.
-- Password visibility controls.
-- Validation and clear authentication error messages.
-- Logged-in email display and account-security settings.
-- Password-reset request protection to prevent duplicate requests while one request is in progress.
-- Email verification action for unverified accounts through Firebase Authentication.
+| Area | Status |
+|---|---|
+| Firebase Authentication | Available and tested |
+| Account-security summary | Available and tested |
+| Local PDF selection and validation | Available and tested |
+| Local PDF workspace | Available and tested |
+| Flutter Web Demo | Deployed and verified through GitHub Pages |
+| Android release APK | Built, installed, and tested on an Android device |
+| Firebase Storage cloud uploads | Unavailable; Storage is not enabled or configured |
 
-### Responsive interface
+> **Storage honesty:** Cloud Guard does not simulate cloud uploads, upload progress, cloud quota, stored cloud files, or successful cloud-upload messages. Firebase Storage is not currently enabled or configured for live uploads.
 
-- Scrollable content on constrained-height screens.
-- Narrow-width fallback for dashboard Quick Actions.
-- Keyboard-aware bottom spacing on Login and Signup forms.
-- Long email addresses and selected filenames truncate safely.
-- Existing card dimensions, colors, labels, and navigation preserved.
+## ✨ What Cloud Guard Includes
 
-### Home Dashboard visual polish
+| Icon | Feature | Description |
+|---|---|---|
+| 🔐 | Authentication | Email/password registration, login, logout, password reset, and session routing through Firebase Authentication. |
+| ✅ | Account security | A transparent account-setup summary based only on Firebase account facts. It is not a risk or threat score. |
+| 📄 | PDF validation | Case-insensitive `.pdf` validation, `%PDF-` signature checking, and a 10 MB size limit. |
+| 🗂️ | Local workspace | Add multiple validated PDFs to a temporary in-memory workspace without Firebase billing. |
+| 🔎 | Search and sort | Search local filenames and sort by name or file size. |
+| 🧹 | Safe cleanup | Remove individual entries or use confirmation-protected Clear All. |
+| 📱 | Cross-platform UI | Responsive Flutter screens for Web and Android. |
 
-- Home Dashboard branding, spacing, typography, and card consistency were tightened without changing navigation, logout, or account-setup wording.
-- A decorative account-setup progress bar was added; it is not a risk, threat, or security-health score.
+## 🖥️ Current Screens
 
-### Local PDF selection and validation
+| Screen | Purpose |
+|---|---|
+| 🔑 Login | Sign in with Firebase Authentication. |
+| 📝 Signup | Create an email/password account. |
+| 🏠 Home Dashboard | View account setup information and quick navigation actions. |
+| ⬆️ Upload Files | Select, validate, and add PDFs to the local workspace. |
+| ☁️ Storage | View local workspace entries and the honest cloud-unavailable state. |
+| 🛡️ Security | Review Firebase-derived account-security checks. |
+| ⚙️ Settings | Access account and application settings. |
+| 👤 Security Settings | Manage password-reset and email-verification actions. |
 
-- Cross-platform file selection with `file_picker`.
-- Case-insensitive `.pdf` extension validation.
-- `%PDF-` signature validation when file bytes can be read.
-- 10 MB maximum PDF file size.
-- Safe picker-cancellation handling that preserves an existing selection.
-- Selected filename and size display.
-- Remove-selection action.
-- Clear messaging when cloud uploads are unavailable.
-- Filename, size, and `%PDF-` checks live in a pure testable module.
-- A selected valid PDF shows a clear local-validation status; this does not indicate cloud upload.
+## 📄 PDF and Local Workspace Flow
 
-### Honest Storage and Recent Uploads empty states
+```text
+Choose PDF
+    ↓
+Validate extension, size, and PDF signature
+    ↓
+Add valid PDF to the shared local workspace
+    ↓
+Search, sort, inspect size, or remove local entries
+```
 
-- Storage Overview and Recent Uploads no longer show fake quota values or placeholder cloud files.
-- Both screens use unavailable/empty states that explain Firebase Storage is not enabled or configured.
+### Local Workspace Features
 
-### Local File Workspace
-
-- Multiple validated PDFs can be added to a temporary in-memory local workspace without Firebase Storage or billing.
+- Multiple validated PDFs can be added.
 - Duplicate entries with the same filename and file size are prevented.
-- Upload Files and Storage screens use the same shared local workspace.
-- Local files show their filename, individual size, total file count, and total size.
-- Local workspace files can be searched and removed.
-- Storage provides local-file sorting by name and size.
-- Storage provides a confirmation-protected Clear All action for temporary local entries.
-- Local workspace unit tests cover adding, duplicate prevention, searching, removing, clearing, and total-size calculation.
+- Upload Files and Storage use the same shared workspace.
+- Each entry shows its filename and size.
+- The workspace shows total file count and total size.
+- Files can be searched by filename.
+- Files can be sorted by name or size.
+- Individual removal is available.
+- Clear All requires confirmation before removing every local entry.
 
-### Truthful account-security summary
+> The local workspace is temporary and in-memory. Entries are not uploaded to Firebase Storage and may disappear after the app is completely closed or restarted.
 
-- Home Dashboard and Security Center use the same Firebase-derived account-setup summary.
-- The summary checks signed-in account status, account email availability, password-provider linkage, and email verification status.
-- The score is a transparent account-setup percentage, not a threat score, password-strength score, firewall status, encryption status, or overall security-risk assessment.
-- Unsupported claims such as Firewall Active, AES-256 encryption enabled, No Threats Detected, cloud-health status, and fixed 92% security health have been removed.
-- Security Center provides an action to manage account security.
-- Password-reset wording describes the actual Firebase Authentication reset-email behavior.
-- Pure unit tests cover no-user, unverified email/password, verified email/password, and non-password-provider cases.
+## ☁️ Firebase Storage Limitation
 
-## Current Screens
+Firebase Authentication is active, but Firebase Storage cloud uploads are not enabled or configured for this MVP.
 
-- Login
-- Signup
-- Home Dashboard
-- Upload Files
-- Storage
-- Security
-- Settings
-- Security Settings
+| Not available currently | What the app does instead |
+|---|---|
+| Cloud upload | Shows a clear unavailable message |
+| Live cloud file listing | Shows an honest empty/unavailable state |
+| Cloud quota and used space | Does not display fabricated values |
+| Simulated upload progress | Does not show fake progress or success |
+| Cloud file search/delete | Keeps search and removal limited to local entries |
 
-## Upload Behavior and Known Limitation
+Firebase Storage, a Storage bucket, billing setup, and Storage rules are not required for the current authentication, PDF-validation, local-workspace, and account-security features.
 
-The Upload Files screen currently supports selecting and validating PDF files locally. After a valid file is selected, it is added to the shared in-memory local workspace, and the interface clearly reports that cloud upload is unavailable because Firebase Storage is not configured or enabled.
+## 🛡️ Account Security Summary
 
-No Firebase Storage request is made, and the app never reports a file as uploaded or displays simulated upload progress. Recent Uploads is an honest empty state: live cloud listings and cloud uploads are unavailable because Firebase Storage is not enabled or configured.
+Cloud Guard displays only account facts that the app can actually inspect through Firebase Authentication.
 
-## Storage Behavior and Known Limitation
+| Check | Meaning |
+|---|---|
+| Signed-in account | An authenticated account is available. |
+| Account email | The account has an available email address. |
+| Password provider | Email/password sign-in is linked to the account. |
+| Email verification | The account email is verified. |
 
-The Storage Overview screen does not show fabricated used/total space or placeholder files. It states that cloud storage and live cloud listings are unavailable because Firebase Storage is not enabled or configured. Cloud Guard does not invent stored files or used space.
+> The account-setup percentage is not a threat score, password-strength score, firewall status, encryption status, cloud-health status, or overall security-risk assessment. Cloud Guard does not monitor cloud infrastructure or real-time threats.
 
-The screen also displays the temporary local workspace with search, sorting, total size, individual remove actions, and a confirmation-protected Clear All action. These local workspace entries are not cloud files and are not persisted after the app is completely closed or restarted.
+## 🧰 Technology Stack
 
-## Security Behavior and Known Limitation
-
-The Security Center displays Firebase Authentication account facts that the app can actually inspect. It does not monitor cloud infrastructure, threats, firewall status, encryption status, or other real-time security events.
-
-The account-setup percentage is calculated from four checks: signed-in account, available email address, linked password sign-in, and verified email. It should not be interpreted as a complete security or risk score.
-
-## Technology Stack
-
-- Flutter
-- Dart
+- Flutter and Dart
 - Firebase Core
 - Firebase Authentication
+- Firebase Storage dependency reserved for future integration
 - `file_picker`
-- `ChangeNotifier`-based in-memory local file workspace
-- Firebase Storage dependency reserved for future integration; no live Storage upload is active
-- Flutter Web and standard Flutter platform folders
+- `ChangeNotifier`-based local workspace
+- Flutter Web and Android platform support
+- Git and GitHub
+- Cursor and OpenAI Codex for AI-assisted development
 
-## Prerequisites
+## 🚀 Platform Support
 
-- Flutter SDK compatible with the version specified in `pubspec.yaml`.
-- A Firebase project configured for this application.
-- Firebase Authentication enabled with the Email/Password provider.
-- For Android phone testing: a data-capable USB cable and USB debugging enabled on the phone.
+| Platform | How to use Cloud Guard |
+|---|---|
+| Desktop browser | Open the Web Demo URL. |
+| Mobile browser | Open the Web Demo URL in a modern browser. |
+| Android phone | Download and install the Android APK. |
+| Android emulator | Install the APK inside an Android emulator. |
+| Windows desktop | Use the Web Demo; Windows does not run APK files directly. |
 
-Firebase Storage, a Storage bucket, billing setup, and Storage rules are not required for the current local PDF-selection, local-workspace, and account-security-summary features.
+## 📱 Android APK Installation
 
-## Setup and Run
+1. Download the APK on an Android phone.
+2. Open `app-release.apk` from the Downloads folder.
+3. If Android asks, allow installation from this source for the browser or file manager.
+4. Install Cloud Guard.
+5. Open the app and sign in or create an account.
 
-Install dependencies:
+## 🛠️ Setup and Run
+
+### Install dependencies
 
 ~~~bash
 flutter pub get
 ~~~
 
-Run the application:
+### Run the application
 
 ~~~bash
 flutter run
 ~~~
 
-Run the Web version in Chrome:
+### Run the Web version in Chrome
 
 ~~~bash
 flutter run -d chrome
 ~~~
 
-Check connected devices:
+### Check connected devices
 
 ~~~bash
 flutter devices
 ~~~
 
-Run on a connected Android phone:
+### Run on a connected Android phone
 
 Enable Developer Options and USB debugging on the phone, connect it with a data-capable USB cable, unlock the phone, select File Transfer if prompted, and allow the USB debugging permission. Then run:
 
@@ -174,81 +184,91 @@ Enable Developer Options and USB debugging on the phone, connect it with a data-
 flutter run -d DEVICE_ID
 ~~~
 
-For example, for the connected phone device ID `6daa931e`:
+For example, for the tested phone device ID `6daa931e`:
 
 ~~~bash
 flutter run -d 6daa931e
 ~~~
 
-Run static analysis:
+## 📦 Build Artifacts
+
+### Build the Flutter Web release
 
 ~~~bash
-flutter analyze
+flutter build web --release --base-href "/Cloud-Guard/"
 ~~~
 
-Run all tests:
+### Build the Android release APK
 
 ~~~bash
-flutter test
+flutter build apk --release
 ~~~
 
-Run the account-security unit tests:
+The generated APK is located at:
 
-~~~bash
-flutter test test/security_status_test.dart
+~~~text
+build/app/outputs/flutter-apk/app-release.apk
 ~~~
 
-Run the PDF validation unit tests:
+## ✅ Testing and Quality Checks
 
-~~~bash
-flutter test test/pdf_file_validation_test.dart
-~~~
+| Check | Command |
+|---|---|
+| Run all tests | `flutter test` |
+| Static analysis | `flutter analyze` |
+| Diff whitespace check | `git diff --check` |
+| Account-security tests | `flutter test test/security_status_test.dart` |
+| PDF validation tests | `flutter test test/pdf_file_validation_test.dart` |
+| Local workspace tests | `flutter test test/local_file_workspace_test.dart` |
 
-Run the local workspace unit tests:
+The current project test suite passes, and Flutter static analysis reports no issues.
 
-~~~bash
-flutter test test/local_file_workspace_test.dart
-~~~
+## 🔁 Development Workflow
 
-## Development Workflow
-
-Before making changes, check the working tree:
+Before changing files:
 
 ~~~bash
 git status
 ~~~
 
-For a new feature, inspect the relevant files first, make a small scoped change, test the app, review the diff, and commit only the intended files. Do not push to the shared `main` branch until the change has been tested.
+For each feature, inspect the relevant files first, make a small scoped change, run tests, review the diff, and commit only the intended files. Do not push to `main` until the change has been tested locally.
 
-## Future Roadmap
+## 🗺️ Future Roadmap
 
-1. Enable and configure Firebase Storage when project and billing requirements allow.
-2. Add authenticated live uploads with real transfer progress and cancellation.
-3. Define and deploy appropriate Firebase Storage security rules.
-4. When Firebase Storage is enabled, replace the Storage and Recent Uploads empty states with per-user live cloud listings.
-5. Add download, delete, rename, and search functionality for live cloud files.
-6. Add broader automated tests for authentication, picker cancellation, responsive layouts, and account-security presentation. PDF validation and local workspace unit tests are in place.
-7. Replace presentation-only security values with additional clearly defined, measurable checks when reliable data sources are available.
-8. Improve app branding, privacy information, and release configuration.
+| Priority | Planned work | Current state |
+|---:|---|---|
+| 1 | Enable and configure Firebase Storage when project and billing requirements allow. | Not enabled |
+| 2 | Add authenticated live uploads with real progress and cancellation. | Blocked by Storage availability |
+| 3 | Define and deploy Firebase Storage security rules. | Future work |
+| 4 | Replace cloud-unavailable states with per-user live listings. | Depends on Storage |
+| 5 | Add download, delete, rename, and search for live cloud files. | Depends on Storage |
+| 6 | Add broader authentication, picker, responsive-layout, and security-presentation tests. | Partially complete |
+| 7 | Add more measurable security checks from reliable data sources. | Future work |
+| 8 | Improve branding, privacy information, and release configuration. | Future work |
 
-## Project History
+## 🧾 Project History
 
 - **Task 1:** Firebase authentication-state routing and logout routing.
 - **Task 2:** Responsive layouts, safe scrolling, narrow-width fallbacks, keyboard-aware spacing, and long-text handling.
 - **Task 3:** Cross-platform local PDF selection and validation with cloud upload kept unavailable.
 - **Task 4:** Truthful Firebase account-security summary, replacing unsupported security claims and adding unit tests.
-- **Storage honesty milestone:** Removed fabricated Storage quota/demo files and replaced them with honest unavailable/empty states because Firebase Storage is not enabled or configured.
+- **Storage honesty milestone:** Removed fabricated Storage quota/demo files and replaced them with honest unavailable/empty states.
 - **Task 5:** Extracted PDF validation into a pure testable module and added focused unit tests.
-- **Task 6:** Focused Home Dashboard UI/UX polish for branding, hierarchy, spacing, card consistency, and a decorative account-setup progress indicator.
-- **Task 7:** Added a Firebase Authentication email-verification action with verified/unverified account states, duplicate-request protection, and clear success/error feedback.
-- **Task 8:** Added a clear local PDF validation-readiness status and local-only explanation without enabling Firebase Storage or changing cloud-upload behavior.
-- **Task 9:** Added a shared in-memory local file workspace with multi-file support, duplicate prevention, local search, total-size display, and removal actions on Upload Files and Storage screens. Added focused workspace unit tests.
-- **Task 10:** Added local workspace sorting by filename and size, plus a confirmation-protected Clear All action for temporary local files.
+- **Task 6:** Polished Home Dashboard branding, hierarchy, spacing, card consistency, and account-setup progress presentation.
+- **Task 7:** Added Firebase Authentication email verification with duplicate-request protection and clear feedback.
+- **Task 8:** Added local PDF validation-readiness status without changing cloud-upload behavior.
+- **Task 9:** Added a shared in-memory local file workspace with multi-file support, duplicate prevention, search, total-size display, and removal actions.
+- **Task 10:** Added local workspace sorting by filename and size, plus confirmation-protected Clear All.
+- **Task 11:** Deployed the Flutter Web demo to GitHub Pages and published the verified Android release APK through GitHub Releases.
 
-## Contributing
+## 🤝 Contributing
 
-Cloud Guard is an MVP under active development. Keep changes focused, preserve existing authentication and UI behavior unless the task specifically requires otherwise, test changes locally, and document new functionality in this README.
+Cloud Guard is an MVP under active development. Keep changes focused, preserve existing authentication and UI behavior unless a task specifically requires otherwise, test changes locally, and document new functionality in this README.
 
-## Development Notes
+## 📝 Development Notes
 
-Cloud Guard has been developed with assistance from ChatGPT, OpenAI Codex, and Cursor for code analysis, authentication routing, responsive-layout improvements, PDF validation, security-status modeling, local workspace development, unit-test planning, and documentation. All generated changes were reviewed, tested, committed, and pushed by the project owner.
+Cloud Guard has been developed with assistance from ChatGPT, OpenAI Codex, and Cursor for code analysis, authentication routing, responsive-layout improvements, PDF validation, security-status modeling, local workspace development, unit-test planning, deployment configuration, and documentation. All generated changes were reviewed, tested, committed, and pushed by the project owner.
+
+## 📄 License
+
+This project is currently an MVP and does not yet include a separate license file.
