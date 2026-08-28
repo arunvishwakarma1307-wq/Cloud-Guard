@@ -260,6 +260,7 @@ For each feature, inspect the relevant files first, make a small scoped change, 
 - **Task 9:** Added a shared in-memory local file workspace with multi-file support, duplicate prevention, search, total-size display, and removal actions.
 - **Task 10:** Added local workspace sorting by filename and size, plus confirmation-protected Clear All.
 - **Task 11:** Deployed the Flutter Web demo to GitHub Pages and published the verified Android release APK through GitHub Releases.
+- **Task 12:** Added PDF Details with metadata and local visual PDF preview without Firebase Storage uploads.
 
 ## 🤝 Contributing
 

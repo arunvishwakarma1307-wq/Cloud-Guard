@@ -1,13 +1,17 @@
+
+
 import 'package:flutter/foundation.dart';
 
 class LocalPdfEntry {
   const LocalPdfEntry({
     required this.name,
     required this.sizeBytes,
+    this.bytes,
   });
 
   final String name;
   final int sizeBytes;
+  final Uint8List? bytes;
 }
 
 class LocalFileWorkspace extends ChangeNotifier {

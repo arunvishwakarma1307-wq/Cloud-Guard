@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'local_file_workspace.dart';
+import 'pdf_details_page.dart';
 
 enum LocalFileSort { nameAscending, sizeAscending, sizeDescending }
 
@@ -63,6 +64,14 @@ class _StoragePageState extends State<StoragePage> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('${entry.name} removed from local workspace.')),
+    );
+  }
+
+  Future<void> openDetails(LocalPdfEntry entry) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PdfDetailsPage(entry: entry),
+      ),
     );
   }
 
@@ -251,9 +260,7 @@ class _StoragePageState extends State<StoragePage> {
                           child: ListTile(
                             leading: Icon(Icons.search_off),
                             title: Text('No matching local files'),
-                            subtitle: Text(
-                              'Try a different filename search.',
-                            ),
+                            subtitle: Text('Try a different filename search.'),
                           ),
                         )
                       else
@@ -262,6 +269,7 @@ class _StoragePageState extends State<StoragePage> {
                             children: [
                               for (final entry in entries)
                                 ListTile(
+                                  onTap: () => openDetails(entry),
                                   leading: const Icon(
                                     Icons.picture_as_pdf,
                                     color: Colors.red,
@@ -274,10 +282,16 @@ class _StoragePageState extends State<StoragePage> {
                                   subtitle: Text(
                                     '${formatFileSize(entry.sizeBytes)} • Available locally only',
                                   ),
-                                  trailing: IconButton(
-                                    tooltip: 'Remove local file',
-                                    onPressed: () => removeEntry(entry),
-                                    icon: const Icon(Icons.delete_outline),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.chevron_right),
+                                      IconButton(
+                                        tooltip: 'Remove local file',
+                                        onPressed: () => removeEntry(entry),
+                                        icon: const Icon(Icons.delete_outline),
+                                      ),
+                                    ],
                                   ),
                                 ),
                             ],

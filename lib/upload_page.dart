@@ -16,7 +16,6 @@ class UploadPage extends StatefulWidget {
 class _UploadPageState extends State<UploadPage> {
   String? selectedFileName;
   int? selectedFileSize;
-
   PlatformFile? selectedFile;
   bool isSelectingFile = false;
 
@@ -31,16 +30,14 @@ class _UploadPageState extends State<UploadPage> {
         allowedExtensions: ['pdf'],
       );
 
-      if (!mounted || file == null) {
-        return;
-      }
+      if (!mounted || file == null) return;
 
       final fileSize = await file.length();
       Uint8List? bytes;
       try {
         bytes = await file.readAsBytes();
       } catch (_) {
-        // Some platforms do not expose file bytes until a later operation.
+        // Keep the existing validation behavior when bytes are unavailable.
       }
 
       final validationMessage = validatePdfFile(
@@ -55,11 +52,15 @@ class _UploadPageState extends State<UploadPage> {
       }
 
       final added = localFileWorkspace.add(
-        LocalPdfEntry(name: file.name, sizeBytes: fileSize),
+        LocalPdfEntry(
+          name: file.name,
+          sizeBytes: fileSize,
+          bytes: bytes,
+        ),
       );
 
       if (!added) {
-        showMessage("This PDF is already in the local workspace.");
+        showMessage('This PDF is already in the local workspace.');
         return;
       }
 
@@ -69,10 +70,10 @@ class _UploadPageState extends State<UploadPage> {
         selectedFileSize = fileSize;
       });
 
-      showMessage("PDF added to the local workspace.");
+      showMessage('PDF added to the local workspace.');
     } catch (_) {
       if (mounted) {
-        showMessage("Unable to select a PDF file. Please try again.");
+        showMessage('Unable to select a PDF file. Please try again.');
       }
     } finally {
       if (mounted) {
@@ -114,26 +115,26 @@ class _UploadPageState extends State<UploadPage> {
 
   void showStorageUnavailable() {
     showMessage(
-      "Cloud upload is unavailable because Firebase Storage is not configured or enabled.",
+      'Cloud upload is unavailable because Firebase Storage is not configured or enabled.',
     );
   }
 
   void showMessage(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   String formatFileSize(int size) {
-    if (size < 1024) return "$size bytes";
+    if (size < 1024) return '$size bytes';
     if (size < 1024 * 1024) {
-      return "${(size / 1024).toStringAsFixed(2)} KB";
+      return '${(size / 1024).toStringAsFixed(2)} KB';
     }
-    return "${(size / (1024 * 1024)).toStringAsFixed(2)} MB";
+    return '${(size / (1024 * 1024)).toStringAsFixed(2)} MB';
   }
 
   String getFileSize() {
-    if (selectedFileSize == null) return "";
+    if (selectedFileSize == null) return '';
     return formatFileSize(selectedFileSize!);
   }
 
@@ -142,7 +143,7 @@ class _UploadPageState extends State<UploadPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "Cloud Upload",
+          'Cloud Upload',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
@@ -154,12 +155,12 @@ class _UploadPageState extends State<UploadPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                "Upload Files",
+                'Upload Files',
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
               const Text(
-                "Select PDF files to keep in your local Cloud Guard workspace",
+                'Select PDF files to keep in your local Cloud Guard workspace',
                 style: TextStyle(color: Colors.grey, fontSize: 16),
               ),
               const SizedBox(height: 30),
@@ -171,18 +172,11 @@ class _UploadPageState extends State<UploadPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
-                        Icons.cloud_upload,
-                        size: 55,
-                        color: Colors.blue,
-                      ),
+                      const Icon(Icons.cloud_upload, size: 55, color: Colors.blue),
                       const SizedBox(height: 15),
                       const Text(
-                        "Select a PDF to add locally",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        'Select a PDF to add locally',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 15),
                       ElevatedButton.icon(
@@ -191,14 +185,10 @@ class _UploadPageState extends State<UploadPage> {
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
+                                child: CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Icon(Icons.upload_file),
-                        label: Text(
-                          isSelectingFile ? "Selecting..." : "Choose PDF",
-                        ),
+                        label: Text(isSelectingFile ? 'Selecting...' : 'Choose PDF'),
                       ),
                     ],
                   ),
@@ -208,11 +198,7 @@ class _UploadPageState extends State<UploadPage> {
               if (selectedFileName != null)
                 Card(
                   child: ListTile(
-                    leading: const Icon(
-                      Icons.picture_as_pdf,
-                      color: Colors.red,
-                      size: 35,
-                    ),
+                    leading: const Icon(Icons.picture_as_pdf, color: Colors.red, size: 35),
                     title: Text(
                       selectedFileName!,
                       style: const TextStyle(fontWeight: FontWeight.bold),
@@ -226,7 +212,7 @@ class _UploadPageState extends State<UploadPage> {
                         Text(getFileSize()),
                         const SizedBox(height: 4),
                         Text(
-                          "PDF validated locally",
+                          'PDF validated locally',
                           style: TextStyle(
                             color: Colors.green.shade700,
                             fontWeight: FontWeight.w600,
@@ -235,7 +221,7 @@ class _UploadPageState extends State<UploadPage> {
                       ],
                     ),
                     trailing: IconButton(
-                      tooltip: "Remove selected file",
+                      tooltip: 'Remove selected file',
                       onPressed: removeSelection,
                       icon: const Icon(Icons.close, color: Colors.grey),
                     ),
@@ -246,7 +232,7 @@ class _UploadPageState extends State<UploadPage> {
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 4),
                   child: Text(
-                    "This file is available locally; cloud upload is unavailable until Firebase Storage is enabled.",
+                    'This file is available locally; cloud upload is unavailable until Firebase Storage is enabled.',
                     style: TextStyle(color: Colors.grey),
                   ),
                 ),
@@ -259,19 +245,19 @@ class _UploadPageState extends State<UploadPage> {
                   child: ElevatedButton.icon(
                     onPressed: showStorageUnavailable,
                     icon: const Icon(Icons.cloud_upload),
-                    label: const Text("Upload to Cloud"),
+                    label: const Text('Upload to Cloud'),
                   ),
                 ),
               if (selectedFile != null) ...[
                 const SizedBox(height: 15),
                 const Text(
-                  "Cloud upload is unavailable because Firebase Storage is not configured or enabled.",
+                  'Cloud upload is unavailable because Firebase Storage is not configured or enabled.',
                   style: TextStyle(color: Colors.grey),
                 ),
               ],
               const SizedBox(height: 25),
               const Text(
-                "Local Workspace",
+                'Local Workspace',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
@@ -284,9 +270,9 @@ class _UploadPageState extends State<UploadPage> {
                     return const Card(
                       child: ListTile(
                         leading: Icon(Icons.folder_open, color: Colors.grey),
-                        title: Text("No local files yet"),
+                        title: Text('No local files yet'),
                         subtitle: Text(
-                          "Validated PDFs added here stay in memory on this device. They are not uploaded to Firebase Storage.",
+                          'Validated PDFs added here stay in memory on this device. They are not uploaded to Firebase Storage.',
                         ),
                       ),
                     );
@@ -298,19 +284,16 @@ class _UploadPageState extends State<UploadPage> {
                         ListTile(
                           leading: const Icon(Icons.folder, color: Colors.blue),
                           title: Text(
-                            "${entries.length} local file${entries.length == 1 ? '' : 's'}",
+                            '${entries.length} local file${entries.length == 1 ? '' : 's'}',
                           ),
                           subtitle: Text(
-                            "Total: ${formatFileSize(localFileWorkspace.totalSizeBytes)}",
+                            'Total: ${formatFileSize(localFileWorkspace.totalSizeBytes)}',
                           ),
                         ),
                         ...entries.map(
                           (entry) => ListTile(
                             dense: true,
-                            leading: const Icon(
-                              Icons.picture_as_pdf,
-                              color: Colors.red,
-                            ),
+                            leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
                             title: Text(
                               entry.name,
                               maxLines: 1,
@@ -318,7 +301,7 @@ class _UploadPageState extends State<UploadPage> {
                             ),
                             subtitle: Text(formatFileSize(entry.sizeBytes)),
                             trailing: IconButton(
-                              tooltip: "Remove local file",
+                              tooltip: 'Remove local file',
                               onPressed: () => removeWorkspaceEntry(entry),
                               icon: const Icon(Icons.delete_outline),
                             ),
@@ -331,16 +314,16 @@ class _UploadPageState extends State<UploadPage> {
               ),
               const SizedBox(height: 25),
               const Text(
-                "Recent Uploads",
+                'Recent Uploads',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
               const Card(
                 child: ListTile(
                   leading: Icon(Icons.info_outline, color: Colors.grey),
-                  title: Text("No recent cloud uploads"),
+                  title: Text('No recent cloud uploads'),
                   subtitle: Text(
-                    "Live cloud listings and cloud uploads are unavailable because Firebase Storage is not enabled or configured.",
+                    'Live cloud listings and cloud uploads are unavailable because Firebase Storage is not enabled or configured.',
                   ),
                 ),
               ),
