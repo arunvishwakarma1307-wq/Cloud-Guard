@@ -5,13 +5,12 @@ import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 import 'home_page.dart';
 import 'login_page.dart';
+import 'update_prompt.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   runApp(const CloudGuardApp());
 }
@@ -25,9 +24,7 @@ class CloudGuardApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Cloud Guard',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
       home: const AuthGate(),
@@ -45,14 +42,12 @@ class AuthGate extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
+            body: Center(child: CircularProgressIndicator()),
           );
         }
 
         if (snapshot.hasData) {
-          return const CloudGuardHome();
+          return const UpdatePrompt(child: CloudGuardHome());
         }
 
         return const LoginPage();
