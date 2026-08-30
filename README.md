@@ -261,6 +261,9 @@ For each feature, inspect the relevant files first, make a small scoped change, 
 - **Task 10:** Added local workspace sorting by filename and size, plus confirmation-protected Clear All.
 - **Task 11:** Deployed the Flutter Web demo to GitHub Pages and published the verified Android release APK through GitHub Releases.
 - **Task 12:** Added PDF Details with metadata and local visual PDF preview without Firebase Storage uploads.
+- **Task 13:** Added a custom Android update checker using a trusted GitHub release manifest.
+- **Task 14:** Added a Security Checklist Center showing Firebase account-setup facts and privacy notes.
+
 
 ## 🤝 Contributing
 
