@@ -1,5 +1,5 @@
 ﻿{
-  "version": "1.0.2+3",
-  "downloadUrl": "https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/download/v1.0.2/app-release.apk",
-  "releaseNotes": "Added the custom Android update checker and trusted GitHub release detection."
+  "version": "1.0.3+4",
+  "downloadUrl": "https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/download/v1.0.3/app-release.apk",
+  "releaseNotes": "Added the Security Checklist Center and Security Activity Center with the latest tested Android release."
 }
