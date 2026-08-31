@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'security_activity_log.dart';
 import 'security_status.dart';
 
 class SecuritySettingsPage extends StatefulWidget {
@@ -15,11 +16,9 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
   bool isSendingVerification = false;
 
   void showMessage(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-      ),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> changePassword(BuildContext context) async {
@@ -28,10 +27,7 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user?.email == null) {
-      showMessage(
-        context,
-        "No user found",
-      );
+      showMessage(context, "No user found");
       return;
     }
 
@@ -40,16 +36,16 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
     });
 
     try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(
-        email: user!.email!,
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: user!.email!);
+
+      securityActivityLog.record(
+        title: 'Password reset requested',
+        description: 'A password reset email was requested for the account.',
       );
 
       if (!context.mounted) return;
 
-      showMessage(
-        context,
-        "Password reset link sent to your email",
-      );
+      showMessage(context, "Password reset link sent to your email");
     } on FirebaseAuthException catch (e) {
       if (!context.mounted) return;
 
@@ -72,18 +68,12 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user?.email == null) {
-      showMessage(
-        context,
-        "No email address is available for this account",
-      );
+      showMessage(context, "No email address is available for this account");
       return;
     }
 
     if (user!.emailVerified) {
-      showMessage(
-        context,
-        "This email address is already verified",
-      );
+      showMessage(context, "This email address is already verified");
       return;
     }
 
@@ -94,12 +84,15 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
     try {
       await user.sendEmailVerification();
 
+      securityActivityLog.record(
+        title: 'Email verification requested',
+        description:
+            'An email verification link was requested for the account.',
+      );
+
       if (!context.mounted) return;
 
-      showMessage(
-        context,
-        "Email verification link sent to your email",
-      );
+      showMessage(context, "Email verification link sent to your email");
     } on FirebaseAuthException catch (e) {
       if (!context.mounted) return;
 
@@ -122,9 +115,8 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
     final securitySummary = SecuritySetupSummary.fromAccount(
       isSignedIn: user != null,
       email: user?.email,
-      providerIds: user?.providerData
-              .map((provider) => provider.providerId)
-              .toList() ??
+      providerIds:
+          user?.providerData.map((provider) => provider.providerId).toList() ??
           const [],
       isEmailVerified: user?.emailVerified ?? false,
     );
@@ -134,9 +126,7 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
       appBar: AppBar(
         title: const Text(
           "Security Settings",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -150,24 +140,14 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
             children: [
               const Text(
                 "Account Security",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
               Card(
                 child: ListTile(
-                  leading: const Icon(
-                    Icons.password,
-                    color: Colors.blue,
-                  ),
-                  title: const Text(
-                    "Change Password",
-                  ),
-                  subtitle: const Text(
-                    "Send password reset link",
-                  ),
+                  leading: const Icon(Icons.password, color: Colors.blue),
+                  title: const Text("Change Password"),
+                  subtitle: const Text("Send password reset link"),
                   trailing: isResettingPassword
                       ? const SizedBox(
                           width: 20,
@@ -183,13 +163,8 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
               const SizedBox(height: 15),
               Card(
                 child: ListTile(
-                  leading: const Icon(
-                    Icons.email,
-                    color: Colors.orange,
-                  ),
-                  title: const Text(
-                    "Email Account",
-                  ),
+                  leading: const Icon(Icons.email, color: Colors.orange),
+                  title: const Text("Email Account"),
                   subtitle: Text(
                     user?.email ?? "No email",
                     maxLines: 1,
@@ -223,12 +198,12 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
                   trailing: user?.emailVerified == true
                       ? null
                       : isSendingVerification
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.arrow_forward_ios),
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.arrow_forward_ios),
                   onTap: user?.emailVerified == true || isSendingVerification
                       ? null
                       : () => sendEmailVerification(context),
@@ -237,10 +212,7 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
               const SizedBox(height: 15),
               Card(
                 child: ListTile(
-                  leading: const Icon(
-                    Icons.shield,
-                    color: Colors.green,
-                  ),
+                  leading: const Icon(Icons.shield, color: Colors.green),
                   title: const Text("Account setup"),
                   subtitle: Text(
                     '${securitySummary.score}% complete — Firebase account setup, not a risk score',

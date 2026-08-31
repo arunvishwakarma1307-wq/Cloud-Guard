@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'security_activity_log.dart';
+
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
 
@@ -24,12 +26,9 @@ class _SignupPageState extends State<SignupPage> {
   Future<void> createAccount() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
-    final confirmPassword =
-        confirmPasswordController.text.trim();
+    final confirmPassword = confirmPasswordController.text.trim();
 
-    if (email.isEmpty ||
-        password.isEmpty ||
-        confirmPassword.isEmpty) {
+    if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       showMessage("Please fill all fields");
       return;
     }
@@ -49,10 +48,14 @@ class _SignupPageState extends State<SignupPage> {
     });
 
     try {
-      await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
         password: password,
+      );
+
+      securityActivityLog.record(
+        title: 'Account created',
+        description: 'A Firebase Authentication account was created.',
       );
 
       showMessage("Account created successfully");
@@ -60,8 +63,7 @@ class _SignupPageState extends State<SignupPage> {
       String message = "Account creation failed";
 
       if (e.code == 'email-already-in-use') {
-        message =
-            "An account already exists with this email";
+        message = "An account already exists with this email";
       } else if (e.code == 'invalid-email') {
         message = "Please enter a valid email";
       } else if (e.code == 'weak-password') {
@@ -81,11 +83,9 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   void showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-      ),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -106,9 +106,7 @@ class _SignupPageState extends State<SignupPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
 
-        title: const Text(
-          "Create Account",
-        ),
+        title: const Text("Create Account"),
       ),
 
       body: SafeArea(
@@ -126,28 +124,19 @@ class _SignupPageState extends State<SignupPage> {
                 // =================================================
                 // ICON
                 // =================================================
-
-                const Icon(
-                  Icons.person_add,
-                  size: 75,
-                  color: Colors.blue,
-                ),
+                const Icon(Icons.person_add, size: 75, color: Colors.blue),
 
                 const SizedBox(height: 20),
 
                 // =================================================
                 // TITLE
                 // =================================================
-
                 const Text(
                   "Create your Cloud Guard account",
 
                   textAlign: TextAlign.center,
 
-                  style: TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                 ),
 
                 const SizedBox(height: 35),
@@ -155,22 +144,18 @@ class _SignupPageState extends State<SignupPage> {
                 // =================================================
                 // EMAIL
                 // =================================================
-
                 TextField(
                   controller: emailController,
 
-                  keyboardType:
-                      TextInputType.emailAddress,
+                  keyboardType: TextInputType.emailAddress,
 
                   decoration: InputDecoration(
                     labelText: "Email",
 
-                    prefixIcon:
-                        const Icon(Icons.email),
+                    prefixIcon: const Icon(Icons.email),
 
                     border: OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(15),
                     ),
                   ),
                 ),
@@ -180,7 +165,6 @@ class _SignupPageState extends State<SignupPage> {
                 // =================================================
                 // PASSWORD
                 // =================================================
-
                 TextField(
                   controller: passwordController,
 
@@ -189,8 +173,7 @@ class _SignupPageState extends State<SignupPage> {
                   decoration: InputDecoration(
                     labelText: "Password",
 
-                    prefixIcon:
-                        const Icon(Icons.lock),
+                    prefixIcon: const Icon(Icons.lock),
 
                     // 👁️ PASSWORD EYE BUTTON
                     suffixIcon: IconButton(
@@ -202,15 +185,13 @@ class _SignupPageState extends State<SignupPage> {
 
                       onPressed: () {
                         setState(() {
-                          isPasswordVisible =
-                              !isPasswordVisible;
+                          isPasswordVisible = !isPasswordVisible;
                         });
                       },
                     ),
 
                     border: OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(15),
                     ),
                   ),
                 ),
@@ -220,19 +201,15 @@ class _SignupPageState extends State<SignupPage> {
                 // =================================================
                 // CONFIRM PASSWORD
                 // =================================================
-
                 TextField(
-                  controller:
-                      confirmPasswordController,
+                  controller: confirmPasswordController,
 
-                  obscureText:
-                      !isConfirmPasswordVisible,
+                  obscureText: !isConfirmPasswordVisible,
 
                   decoration: InputDecoration(
                     labelText: "Confirm Password",
 
-                    prefixIcon:
-                        const Icon(Icons.lock_outline),
+                    prefixIcon: const Icon(Icons.lock_outline),
 
                     // 👁️ CONFIRM PASSWORD EYE BUTTON
                     suffixIcon: IconButton(
@@ -244,15 +221,13 @@ class _SignupPageState extends State<SignupPage> {
 
                       onPressed: () {
                         setState(() {
-                          isConfirmPasswordVisible =
-                              !isConfirmPasswordVisible;
+                          isConfirmPasswordVisible = !isConfirmPasswordVisible;
                         });
                       },
                     ),
 
                     border: OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(15),
                     ),
                   ),
                 ),
@@ -262,17 +237,13 @@ class _SignupPageState extends State<SignupPage> {
                 // =================================================
                 // CREATE ACCOUNT BUTTON
                 // =================================================
-
                 SizedBox(
                   width: double.infinity,
 
                   height: 55,
 
                   child: ElevatedButton(
-                    onPressed:
-                        isLoading
-                            ? null
-                            : createAccount,
+                    onPressed: isLoading ? null : createAccount,
 
                     child: isLoading
                         ? const CircularProgressIndicator()
@@ -281,8 +252,7 @@ class _SignupPageState extends State<SignupPage> {
 
                             style: TextStyle(
                               fontSize: 18,
-                              fontWeight:
-                                  FontWeight.bold,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                   ),
@@ -293,15 +263,12 @@ class _SignupPageState extends State<SignupPage> {
                 // =================================================
                 // LOGIN
                 // =================================================
-
                 TextButton(
                   onPressed: () {
                     Navigator.pop(context);
                   },
 
-                  child: const Text(
-                    "Already have an account? Login",
-                  ),
+                  child: const Text("Already have an account? Login"),
                 ),
               ],
             ),

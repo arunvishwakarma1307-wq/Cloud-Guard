@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'security_activity_log.dart';
 import 'signup_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -43,6 +44,10 @@ class _LoginPageState extends State<LoginPage> {
         password: password,
       );
 
+      securityActivityLog.record(
+        title: 'Login successful',
+        description: 'A Firebase Authentication login was completed.',
+      );
     } on FirebaseAuthException catch (e) {
       String message = "Login failed";
 
@@ -85,15 +90,11 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(
-        email: email,
-      );
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
 
       if (!mounted) return;
 
-      showMessage(
-        "Password reset email sent. Please check your inbox.",
-      );
+      showMessage("Password reset email sent. Please check your inbox.");
     } on FirebaseAuthException catch (e) {
       String message = "Could not send reset email";
 
@@ -120,11 +121,9 @@ class _LoginPageState extends State<LoginPage> {
   // =====================================================
 
   void showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-      ),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   // =====================================================
@@ -165,22 +164,14 @@ class _LoginPageState extends State<LoginPage> {
                 // =================================================
                 // LOGO
                 // =================================================
-
-                const Icon(
-                  Icons.cloud,
-                  size: 80,
-                  color: Colors.blue,
-                ),
+                const Icon(Icons.cloud, size: 80, color: Colors.blue),
 
                 const SizedBox(height: 20),
 
                 const Text(
                   "Cloud Guard",
 
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                 ),
 
                 const SizedBox(height: 8),
@@ -188,10 +179,7 @@ class _LoginPageState extends State<LoginPage> {
                 const Text(
                   "Secure your cloud world",
 
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(color: Colors.grey, fontSize: 16),
                 ),
 
                 const SizedBox(height: 40),
@@ -199,23 +187,18 @@ class _LoginPageState extends State<LoginPage> {
                 // =================================================
                 // EMAIL
                 // =================================================
-
                 TextField(
                   controller: emailController,
 
-                  keyboardType:
-                      TextInputType.emailAddress,
+                  keyboardType: TextInputType.emailAddress,
 
                   decoration: InputDecoration(
                     labelText: "Email",
 
-                    prefixIcon: const Icon(
-                      Icons.email,
-                    ),
+                    prefixIcon: const Icon(Icons.email),
 
                     border: OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(15),
                     ),
                   ),
                 ),
@@ -225,7 +208,6 @@ class _LoginPageState extends State<LoginPage> {
                 // =================================================
                 // PASSWORD
                 // =================================================
-
                 TextField(
                   controller: passwordController,
 
@@ -236,9 +218,7 @@ class _LoginPageState extends State<LoginPage> {
                   decoration: InputDecoration(
                     labelText: "Password",
 
-                    prefixIcon: const Icon(
-                      Icons.lock,
-                    ),
+                    prefixIcon: const Icon(Icons.lock),
 
                     // 👁️ EYE BUTTON
                     suffixIcon: IconButton(
@@ -250,15 +230,13 @@ class _LoginPageState extends State<LoginPage> {
 
                       onPressed: () {
                         setState(() {
-                          isPasswordVisible =
-                              !isPasswordVisible;
+                          isPasswordVisible = !isPasswordVisible;
                         });
                       },
                     ),
 
                     border: OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(15),
                     ),
                   ),
                 ),
@@ -266,28 +244,20 @@ class _LoginPageState extends State<LoginPage> {
                 // =================================================
                 // FORGOT PASSWORD
                 // =================================================
-
                 Align(
                   alignment: Alignment.centerRight,
 
                   child: TextButton(
-                    onPressed: isResettingPassword
-                        ? null
-                        : resetPassword,
+                    onPressed: isResettingPassword ? null : resetPassword,
 
                     child: isResettingPassword
                         ? const SizedBox(
                             width: 18,
                             height: 18,
 
-                            child:
-                                CircularProgressIndicator(
-                              strokeWidth: 2,
-                            ),
+                            child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text(
-                            "Forgot Password?",
-                          ),
+                        : const Text("Forgot Password?"),
                   ),
                 ),
 
@@ -296,15 +266,13 @@ class _LoginPageState extends State<LoginPage> {
                 // =================================================
                 // LOGIN BUTTON
                 // =================================================
-
                 SizedBox(
                   width: double.infinity,
 
                   height: 55,
 
                   child: ElevatedButton(
-                    onPressed:
-                        isLoading ? null : loginUser,
+                    onPressed: isLoading ? null : loginUser,
 
                     child: isLoading
                         ? const CircularProgressIndicator()
@@ -313,8 +281,7 @@ class _LoginPageState extends State<LoginPage> {
 
                             style: TextStyle(
                               fontSize: 18,
-                              fontWeight:
-                                  FontWeight.bold,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                   ),
@@ -325,15 +292,12 @@ class _LoginPageState extends State<LoginPage> {
                 // =================================================
                 // CREATE ACCOUNT
                 // =================================================
-
                 Wrap(
                   alignment: WrapAlignment.center,
                   crossAxisAlignment: WrapCrossAlignment.center,
 
                   children: [
-                    const Text(
-                      "Don't have an account?",
-                    ),
+                    const Text("Don't have an account?"),
 
                     TextButton(
                       onPressed: () {
@@ -341,15 +305,12 @@ class _LoginPageState extends State<LoginPage> {
                           context,
 
                           MaterialPageRoute(
-                            builder: (context) =>
-                                const SignupPage(),
+                            builder: (context) => const SignupPage(),
                           ),
                         );
                       },
 
-                      child: const Text(
-                        "Create Account",
-                      ),
+                      child: const Text("Create Account"),
                     ),
                   ],
                 ),

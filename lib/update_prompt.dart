@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_update_checker.dart';
+import 'security_activity_log.dart';
 
 class UpdatePrompt extends StatefulWidget {
   const UpdatePrompt({super.key, required this.child});
@@ -29,6 +30,12 @@ class _UpdatePromptState extends State<UpdatePrompt> {
 
     final update = await _checker.checkForAndroidUpdate();
     if (!mounted || update == null) return;
+
+    securityActivityLog.record(
+      title: 'Update detected',
+      description:
+          'A newer Cloud Guard release ${update.version} is available.',
+    );
 
     await showDialog<void>(
       context: context,

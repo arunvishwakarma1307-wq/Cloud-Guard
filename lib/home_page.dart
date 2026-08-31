@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'security_activity_log.dart';
 import 'security_checklist_page.dart';
+
 import 'security_activity_page.dart';
 
 import 'storage_page.dart';
@@ -13,6 +15,11 @@ class CloudGuardHome extends StatelessWidget {
   const CloudGuardHome({super.key});
 
   Future<void> logout(BuildContext context) async {
+    securityActivityLog.record(
+      title: 'Logout',
+      description: 'The Firebase Authentication session was signed out.',
+    );
+
     await FirebaseAuth.instance.signOut();
   }
 

@@ -4,6 +4,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import 'local_file_workspace.dart';
+import 'security_activity_log.dart';
+
 import 'pdf_file_validation.dart';
 
 class UploadPage extends StatefulWidget {
@@ -52,11 +54,7 @@ class _UploadPageState extends State<UploadPage> {
       }
 
       final added = localFileWorkspace.add(
-        LocalPdfEntry(
-          name: file.name,
-          sizeBytes: fileSize,
-          bytes: bytes,
-        ),
+        LocalPdfEntry(name: file.name, sizeBytes: fileSize, bytes: bytes),
       );
 
       if (!added) {
@@ -69,6 +67,11 @@ class _UploadPageState extends State<UploadPage> {
         selectedFileName = file.name;
         selectedFileSize = fileSize;
       });
+
+      securityActivityLog.record(
+        title: 'Local PDF added',
+        description: '${file.name} was added to the temporary local workspace.',
+      );
 
       showMessage('PDF added to the local workspace.');
     } catch (_) {
@@ -89,8 +92,11 @@ class _UploadPageState extends State<UploadPage> {
     final size = selectedFileSize;
 
     if (name != null && size != null) {
-      localFileWorkspace.remove(
-        LocalPdfEntry(name: name, sizeBytes: size),
+      localFileWorkspace.remove(LocalPdfEntry(name: name, sizeBytes: size));
+
+      securityActivityLog.record(
+        title: 'Local PDF removed',
+        description: '$name was removed from the temporary local workspace.',
       );
     }
 
@@ -102,7 +108,15 @@ class _UploadPageState extends State<UploadPage> {
   }
 
   void removeWorkspaceEntry(LocalPdfEntry entry) {
-    localFileWorkspace.remove(entry);
+    final removed = localFileWorkspace.remove(entry);
+
+    if (removed) {
+      securityActivityLog.record(
+        title: 'Local PDF removed',
+        description:
+            '${entry.name} was removed from the temporary local workspace.',
+      );
+    }
 
     if (selectedFileName == entry.name && selectedFileSize == entry.sizeBytes) {
       setState(() {
@@ -120,9 +134,9 @@ class _UploadPageState extends State<UploadPage> {
   }
 
   void showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   String formatFileSize(int size) {
@@ -172,11 +186,18 @@ class _UploadPageState extends State<UploadPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.cloud_upload, size: 55, color: Colors.blue),
+                      const Icon(
+                        Icons.cloud_upload,
+                        size: 55,
+                        color: Colors.blue,
+                      ),
                       const SizedBox(height: 15),
                       const Text(
                         'Select a PDF to add locally',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 15),
                       ElevatedButton.icon(
@@ -185,10 +206,14 @@ class _UploadPageState extends State<UploadPage> {
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Icon(Icons.upload_file),
-                        label: Text(isSelectingFile ? 'Selecting...' : 'Choose PDF'),
+                        label: Text(
+                          isSelectingFile ? 'Selecting...' : 'Choose PDF',
+                        ),
                       ),
                     ],
                   ),
@@ -198,7 +223,11 @@ class _UploadPageState extends State<UploadPage> {
               if (selectedFileName != null)
                 Card(
                   child: ListTile(
-                    leading: const Icon(Icons.picture_as_pdf, color: Colors.red, size: 35),
+                    leading: const Icon(
+                      Icons.picture_as_pdf,
+                      color: Colors.red,
+                      size: 35,
+                    ),
                     title: Text(
                       selectedFileName!,
                       style: const TextStyle(fontWeight: FontWeight.bold),
@@ -293,7 +322,10 @@ class _UploadPageState extends State<UploadPage> {
                         ...entries.map(
                           (entry) => ListTile(
                             dense: true,
-                            leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+                            leading: const Icon(
+                              Icons.picture_as_pdf,
+                              color: Colors.red,
+                            ),
                             title: Text(
                               entry.name,
                               maxLines: 1,
