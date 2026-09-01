@@ -20,9 +20,10 @@ https://arunvishwakarma1307-wq.github.io/Cloud-Guard/
 
 ### 📱 Android APK
 
-https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/download/v1.0.0/app-release.apk
+https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/download/v1.0.3/app-release.apk
 
-[View Android Release v1.0.0](https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/tag/v1.0.0)
+[View Android Release v1.0.3](https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/tag/v1.0.3 )
+
 
 > Android users: Download the APK, open it from the Downloads folder, allow installation from this source if Android asks for permission, install it, and then open Cloud Guard. Windows users should use the Web Demo because Windows cannot open Android APK files directly.
 
@@ -263,6 +264,8 @@ For each feature, inspect the relevant files first, make a small scoped change, 
 - **Task 12:** Added PDF Details with metadata and local visual PDF preview without Firebase Storage uploads.
 - **Task 13:** Added a custom Android update checker using a trusted GitHub release manifest.
 - **Task 14:** Added a Security Checklist Center showing Firebase account-setup facts and privacy notes.
+- **Task 15:** Connected the Security Activity Center with supported local app events.
+- **Task 16:** Added local activity records for login, signup, logout, password reset, email verification, update detection, and local PDF add/remove actions.
 
 
 ## 🤝 Contributing
