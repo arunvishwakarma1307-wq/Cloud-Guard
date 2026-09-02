@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
@@ -43,7 +45,18 @@ class PdfDetailsPage extends StatelessWidget {
     }
   }
 
-  Widget buildPreview() {
+  void openFullScreenPreview(BuildContext context) {
+    final bytes = entry.bytes;
+    if (bytes == null || bytes.isEmpty) return;
+
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PdfReaderPage(fileName: entry.name, bytes: bytes),
+      ),
+    );
+  }
+
+  Widget buildPreview(BuildContext context) {
     final bytes = entry.bytes;
 
     if (bytes == null || bytes.isEmpty) {
@@ -72,10 +85,28 @@ class PdfDetailsPage extends StatelessWidget {
     }
 
     return Card(
-      clipBehavior: Clip.antiAlias,
-      child: SizedBox(
-        height: 520,
-        child: SfPdfViewer.memory(bytes),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            const Icon(Icons.picture_as_pdf, size: 48, color: Colors.red),
+            const SizedBox(height: 10),
+            const Text(
+              'Open the complete PDF in full-screen preview.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => openFullScreenPreview(context),
+                icon: const Icon(Icons.open_in_full),
+                label: const Text('Open Full-Screen Preview'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -155,7 +186,7 @@ class PdfDetailsPage extends StatelessWidget {
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
-              buildPreview(),
+              buildPreview(context),
             ],
           ),
         ),
@@ -164,12 +195,85 @@ class PdfDetailsPage extends StatelessWidget {
   }
 }
 
+class PdfReaderPage extends StatefulWidget {
+  const PdfReaderPage({super.key, required this.fileName, required this.bytes});
+
+  final String fileName;
+  final Uint8List bytes;
+
+  @override
+  State<PdfReaderPage> createState() => _PdfReaderPageState();
+}
+
+class _PdfReaderPageState extends State<PdfReaderPage> {
+  final PdfViewerController _controller = PdfViewerController();
+  int _pageCount = 0;
+  int _currentPage = 0;
+
+  void _jumpToPage(int? page) {
+    if (page == null || page < 1 || page > _pageCount) return;
+    _controller.jumpToPage(page);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          widget.fileName,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        actions: [
+          if (_pageCount > 0)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Center(
+                child: DropdownButton<int>(
+                  value: _currentPage == 0 ? 1 : _currentPage,
+                  underline: const SizedBox.shrink(),
+                  dropdownColor: Theme.of(context).colorScheme.surface,
+                  onChanged: _jumpToPage,
+                  items: List<DropdownMenuItem<int>>.generate(
+                    _pageCount,
+                    (index) => DropdownMenuItem<int>(
+                      value: index + 1,
+                      child: Text('Page ${index + 1}'),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+      body: SfPdfViewer.memory(
+        widget.bytes,
+        controller: _controller,
+        pageLayoutMode: PdfPageLayoutMode.single,
+        scrollDirection: PdfScrollDirection.vertical,
+        enableDoubleTapZooming: true,
+        canShowScrollHead: true,
+        canShowScrollStatus: true,
+        onDocumentLoaded: (details) {
+          if (!mounted) return;
+          setState(() {
+            _pageCount = details.document.pages.count;
+            _currentPage = 1;
+          });
+        },
+        onPageChanged: (details) {
+          if (!mounted) return;
+          setState(() {
+            _currentPage = details.newPageNumber;
+          });
+        },
+      ),
+    );
+  }
+}
+
 class _DetailRow extends StatelessWidget {
-  const _DetailRow({
-    required this.label,
-    required this.value,
-    this.valueColor,
-  });
+  const _DetailRow({required this.label, required this.value, this.valueColor});
 
   final String label;
   final String value;
@@ -184,18 +288,12 @@ class _DetailRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 120,
-            child: Text(
-              label,
-              style: const TextStyle(color: Colors.grey),
-            ),
+            child: Text(label, style: const TextStyle(color: Colors.grey)),
           ),
           Expanded(
             child: Text(
               value,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: valueColor,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w600, color: valueColor),
             ),
           ),
         ],

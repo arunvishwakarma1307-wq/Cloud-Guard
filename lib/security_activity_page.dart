@@ -65,7 +65,7 @@ class SecurityActivityPage extends StatelessWidget {
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       subtitle: const Text(
-                        'This is not a real-time Firebase audit log or cloud security monitoring service. Records are temporary and stay in app memory.',
+                        'This is not a real-time Firebase audit log or cloud security monitoring service. Records are stored locally on this device and are not uploaded to the cloud.',
                       ),
                     ),
                   ),
@@ -76,7 +76,7 @@ class SecurityActivityPage extends StatelessWidget {
                         leading: Icon(Icons.history, color: Colors.grey),
                         title: Text('No activity recorded yet'),
                         subtitle: Text(
-                          'Activity will appear here after supported actions are recorded.',
+                          'Activity will appear here after supported actions are recorded. Saved events remain available after an app restart.',
                         ),
                       ),
                     )
