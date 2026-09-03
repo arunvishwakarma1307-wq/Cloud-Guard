@@ -55,6 +55,8 @@ Cloud Guard is currently in **MVP development**.
 | 🔎 | Search and sort | Search local filenames and sort by name or file size. |
 | 🧹 | Safe cleanup | Remove individual entries or use confirmation-protected Clear All. |
 | 📱 | Cross-platform UI | Responsive Flutter screens for Web and Android. |
+| 📖 | PDF reader | Full-screen single-page PDF reader with readable default zoom, Zoom In, Zoom Out, Reset Zoom, page selection, text selection, and smooth vertical scrolling. |
+
 
 ## 🖥️ Current Screens
 
@@ -269,6 +271,8 @@ For each feature, inspect the relevant files first, make a small scoped change, 
 - **Task 16:** Added local activity records for login, signup, logout, password reset, email verification, update detection, and local PDF add/remove actions.
 - **Task 17:** Added persistent local Security Activity History that remains available after app restarts.
 - **Task 18:** Improved the PDF preview with a full-screen single-page viewer, readable page display, page navigation, zoom, and scrolling.
+- **Task 19:** Improved the full-screen PDF reader with clearer default readability, higher zoom support, page selection, text selection, and smoother vertical scrolling.
+
 
 
 

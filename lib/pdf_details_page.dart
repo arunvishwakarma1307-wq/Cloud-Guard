@@ -206,13 +206,36 @@ class PdfReaderPage extends StatefulWidget {
 }
 
 class _PdfReaderPageState extends State<PdfReaderPage> {
+  static const double _minimumZoom = 0.75;
+  static const double _maximumZoom = 4.0;
+  static const double _zoomStep = 0.25;
+  static const double _defaultZoom = 2.0;
+
   final PdfViewerController _controller = PdfViewerController();
   int _pageCount = 0;
   int _currentPage = 0;
+  double _zoomLevel = _defaultZoom;
 
   void _jumpToPage(int? page) {
     if (page == null || page < 1 || page > _pageCount) return;
     _controller.jumpToPage(page);
+  }
+
+  void _changeZoom(double amount) {
+    final nextZoom = (_zoomLevel + amount)
+        .clamp(_minimumZoom, _maximumZoom)
+        .toDouble();
+    _controller.zoomLevel = nextZoom;
+    setState(() {
+      _zoomLevel = nextZoom;
+    });
+  }
+
+  void _resetZoom() {
+    _controller.zoomLevel = _defaultZoom;
+    setState(() {
+      _zoomLevel = _defaultZoom;
+    });
   }
 
   @override
@@ -225,6 +248,25 @@ class _PdfReaderPageState extends State<PdfReaderPage> {
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
+          IconButton(
+            tooltip: 'Zoom out',
+            onPressed: _zoomLevel > _minimumZoom
+                ? () => _changeZoom(-_zoomStep)
+                : null,
+            icon: const Icon(Icons.zoom_out),
+          ),
+          IconButton(
+            tooltip: 'Reset zoom',
+            onPressed: _zoomLevel == _defaultZoom ? null : _resetZoom,
+            icon: const Icon(Icons.fit_screen),
+          ),
+          IconButton(
+            tooltip: 'Zoom in',
+            onPressed: _zoomLevel < _maximumZoom
+                ? () => _changeZoom(_zoomStep)
+                : null,
+            icon: const Icon(Icons.zoom_in),
+          ),
           if (_pageCount > 0)
             Padding(
               padding: const EdgeInsets.only(right: 12),
@@ -251,7 +293,10 @@ class _PdfReaderPageState extends State<PdfReaderPage> {
         controller: _controller,
         pageLayoutMode: PdfPageLayoutMode.single,
         scrollDirection: PdfScrollDirection.vertical,
+        pageSpacing: 8,
+        maxZoomLevel: _maximumZoom,
         enableDoubleTapZooming: true,
+        enableTextSelection: true,
         canShowScrollHead: true,
         canShowScrollStatus: true,
         onDocumentLoaded: (details) {
@@ -259,6 +304,8 @@ class _PdfReaderPageState extends State<PdfReaderPage> {
           setState(() {
             _pageCount = details.document.pages.count;
             _currentPage = 1;
+            _controller.zoomLevel = _defaultZoom;
+            _zoomLevel = _defaultZoom;
           });
         },
         onPageChanged: (details) {
