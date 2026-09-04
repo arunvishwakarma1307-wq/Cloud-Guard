@@ -16,11 +16,7 @@ class _SignupPageState extends State<SignupPage> {
   final confirmPasswordController = TextEditingController();
 
   bool isLoading = false;
-
-  // Password show/hide
   bool isPasswordVisible = false;
-
-  // Confirm password show/hide
   bool isConfirmPasswordVisible = false;
 
   Future<void> createAccount() async {
@@ -29,17 +25,17 @@ class _SignupPageState extends State<SignupPage> {
     final confirmPassword = confirmPasswordController.text.trim();
 
     if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
-      showMessage("Please fill all fields");
+      showMessage('Please fill all fields');
       return;
     }
 
     if (password != confirmPassword) {
-      showMessage("Passwords do not match");
+      showMessage('Passwords do not match');
       return;
     }
 
     if (password.length < 6) {
-      showMessage("Password must be at least 6 characters");
+      showMessage('Password must be at least 6 characters');
       return;
     }
 
@@ -58,21 +54,21 @@ class _SignupPageState extends State<SignupPage> {
         description: 'A Firebase Authentication account was created.',
       );
 
-      showMessage("Account created successfully");
+      showMessage('Account created successfully');
     } on FirebaseAuthException catch (e) {
-      String message = "Account creation failed";
+      String message = 'Account creation failed';
 
       if (e.code == 'email-already-in-use') {
-        message = "An account already exists with this email";
+        message = 'An account already exists with this email';
       } else if (e.code == 'invalid-email') {
-        message = "Please enter a valid email";
+        message = 'Please enter a valid email';
       } else if (e.code == 'weak-password') {
-        message = "Password is too weak";
+        message = 'Password is too weak';
       }
 
       showMessage(message);
     } catch (e) {
-      showMessage("Something went wrong");
+      showMessage('Something went wrong');
     }
 
     if (mounted) {
@@ -93,22 +89,55 @@ class _SignupPageState extends State<SignupPage> {
     emailController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
-
     super.dispose();
+  }
+
+  InputDecoration fieldDecoration({
+    required BuildContext context,
+    required String label,
+    required IconData icon,
+    Widget? suffixIcon,
+  }) {
+    final colors = Theme.of(context).colorScheme;
+
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: colors.onSurfaceVariant),
+      floatingLabelStyle: TextStyle(color: colors.primary),
+      prefixIcon: Icon(icon, color: colors.primary),
+      suffixIcon: suffixIcon,
+      suffixIconColor: colors.onSurfaceVariant,
+      filled: true,
+      fillColor: colors.surface,
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide(color: colors.outline),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide(color: colors.primary, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide(color: colors.error),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide(color: colors.error, width: 2),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xfff6f8ff),
+    final colors = Theme.of(context).colorScheme;
 
+    return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-
-        title: const Text("Create Account"),
+        title: const Text('Create Account'),
       ),
-
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -118,138 +147,85 @@ class _SignupPageState extends State<SignupPage> {
               25,
               25 + MediaQuery.viewInsetsOf(context).bottom,
             ),
-
             child: Column(
               children: [
-                // =================================================
-                // ICON
-                // =================================================
-                const Icon(Icons.person_add, size: 75, color: Colors.blue),
-
+                Icon(Icons.person_add, size: 75, color: colors.primary),
                 const SizedBox(height: 20),
-
-                // =================================================
-                // TITLE
-                // =================================================
                 const Text(
-                  "Create your Cloud Guard account",
-
+                  'Create your Cloud Guard account',
                   textAlign: TextAlign.center,
-
                   style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                 ),
-
                 const SizedBox(height: 35),
-
-                // =================================================
-                // EMAIL
-                // =================================================
                 TextField(
                   controller: emailController,
-
                   keyboardType: TextInputType.emailAddress,
-
-                  decoration: InputDecoration(
-                    labelText: "Email",
-
-                    prefixIcon: const Icon(Icons.email),
-
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
+                  style: TextStyle(color: colors.onSurface),
+                  cursorColor: colors.primary,
+                  decoration: fieldDecoration(
+                    context: context,
+                    label: 'Email',
+                    icon: Icons.email,
                   ),
                 ),
-
                 const SizedBox(height: 20),
-
-                // =================================================
-                // PASSWORD
-                // =================================================
                 TextField(
                   controller: passwordController,
-
                   obscureText: !isPasswordVisible,
-
-                  decoration: InputDecoration(
-                    labelText: "Password",
-
-                    prefixIcon: const Icon(Icons.lock),
-
-                    // 👁️ PASSWORD EYE BUTTON
+                  style: TextStyle(color: colors.onSurface),
+                  cursorColor: colors.primary,
+                  decoration: fieldDecoration(
+                    context: context,
+                    label: 'Password',
+                    icon: Icons.lock,
                     suffixIcon: IconButton(
                       icon: Icon(
                         isPasswordVisible
                             ? Icons.visibility
                             : Icons.visibility_off,
                       ),
-
                       onPressed: () {
                         setState(() {
                           isPasswordVisible = !isPasswordVisible;
                         });
                       },
                     ),
-
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
                   ),
                 ),
-
                 const SizedBox(height: 20),
-
-                // =================================================
-                // CONFIRM PASSWORD
-                // =================================================
                 TextField(
                   controller: confirmPasswordController,
-
                   obscureText: !isConfirmPasswordVisible,
-
-                  decoration: InputDecoration(
-                    labelText: "Confirm Password",
-
-                    prefixIcon: const Icon(Icons.lock_outline),
-
-                    // 👁️ CONFIRM PASSWORD EYE BUTTON
+                  style: TextStyle(color: colors.onSurface),
+                  cursorColor: colors.primary,
+                  decoration: fieldDecoration(
+                    context: context,
+                    label: 'Confirm Password',
+                    icon: Icons.lock_outline,
                     suffixIcon: IconButton(
                       icon: Icon(
                         isConfirmPasswordVisible
                             ? Icons.visibility
                             : Icons.visibility_off,
                       ),
-
                       onPressed: () {
                         setState(() {
                           isConfirmPasswordVisible = !isConfirmPasswordVisible;
                         });
                       },
                     ),
-
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
                   ),
                 ),
-
                 const SizedBox(height: 25),
-
-                // =================================================
-                // CREATE ACCOUNT BUTTON
-                // =================================================
                 SizedBox(
                   width: double.infinity,
-
                   height: 55,
-
                   child: ElevatedButton(
                     onPressed: isLoading ? null : createAccount,
-
                     child: isLoading
                         ? const CircularProgressIndicator()
                         : const Text(
-                            "Create Account",
-
+                            'Create Account',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -257,18 +233,12 @@ class _SignupPageState extends State<SignupPage> {
                           ),
                   ),
                 ),
-
                 const SizedBox(height: 15),
-
-                // =================================================
-                // LOGIN
-                // =================================================
                 TextButton(
                   onPressed: () {
                     Navigator.pop(context);
                   },
-
-                  child: const Text("Already have an account? Login"),
+                  child: const Text('Already have an account? Login'),
                 ),
               ],
             ),

@@ -17,20 +17,14 @@ class _LoginPageState extends State<LoginPage> {
 
   bool isLoading = false;
   bool isResettingPassword = false;
-
-  // Password visible hai ya hidden
   bool isPasswordVisible = false;
-
-  // =====================================================
-  // LOGIN
-  // =====================================================
 
   Future<void> loginUser() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      showMessage("Please enter email and password");
+      showMessage('Please enter email and password');
       return;
     }
 
@@ -49,21 +43,21 @@ class _LoginPageState extends State<LoginPage> {
         description: 'A Firebase Authentication login was completed.',
       );
     } on FirebaseAuthException catch (e) {
-      String message = "Login failed";
+      String message = 'Login failed';
 
       if (e.code == 'user-not-found') {
-        message = "No account found with this email";
+        message = 'No account found with this email';
       } else if (e.code == 'wrong-password') {
-        message = "Incorrect password";
+        message = 'Incorrect password';
       } else if (e.code == 'invalid-email') {
-        message = "Please enter a valid email";
+        message = 'Please enter a valid email';
       } else if (e.code == 'invalid-credential') {
-        message = "Email or password is incorrect";
+        message = 'Email or password is incorrect';
       }
 
       showMessage(message);
     } catch (e) {
-      showMessage("Something went wrong");
+      showMessage('Something went wrong');
     }
 
     if (mounted) {
@@ -73,15 +67,11 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  // =====================================================
-  // FORGOT PASSWORD
-  // =====================================================
-
   Future<void> resetPassword() async {
     final email = emailController.text.trim();
 
     if (email.isEmpty) {
-      showMessage("Please enter your email first");
+      showMessage('Please enter your email first');
       return;
     }
 
@@ -93,20 +83,19 @@ class _LoginPageState extends State<LoginPage> {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
 
       if (!mounted) return;
-
-      showMessage("Password reset email sent. Please check your inbox.");
+      showMessage('Password reset email sent. Please check your inbox.');
     } on FirebaseAuthException catch (e) {
-      String message = "Could not send reset email";
+      String message = 'Could not send reset email';
 
       if (e.code == 'invalid-email') {
-        message = "Please enter a valid email";
+        message = 'Please enter a valid email';
       } else if (e.code == 'user-not-found') {
-        message = "No account found with this email";
+        message = 'No account found with this email';
       }
 
       showMessage(message);
     } catch (e) {
-      showMessage("Something went wrong");
+      showMessage('Something went wrong');
     }
 
     if (mounted) {
@@ -116,37 +105,60 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  // =====================================================
-  // MESSAGE
-  // =====================================================
-
   void showMessage(String message) {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  // =====================================================
-  // DISPOSE
-  // =====================================================
-
   @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
-
     super.dispose();
   }
 
-  // =====================================================
-  // UI
-  // =====================================================
+  InputDecoration fieldDecoration({
+    required BuildContext context,
+    required String label,
+    required IconData icon,
+    Widget? suffixIcon,
+  }) {
+    final colors = Theme.of(context).colorScheme;
+
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: colors.onSurfaceVariant),
+      floatingLabelStyle: TextStyle(color: colors.primary),
+      prefixIcon: Icon(icon, color: colors.primary),
+      suffixIcon: suffixIcon,
+      suffixIconColor: colors.onSurfaceVariant,
+      filled: true,
+      fillColor: colors.surface,
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide(color: colors.outline),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide(color: colors.primary, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide(color: colors.error),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide(color: colors.error, width: 2),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xfff6f8ff),
+    final colors = Theme.of(context).colorScheme;
 
+    return Scaffold(
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -156,129 +168,79 @@ class _LoginPageState extends State<LoginPage> {
               25,
               25 + MediaQuery.viewInsetsOf(context).bottom,
             ),
-
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-
               children: [
-                // =================================================
-                // LOGO
-                // =================================================
-                const Icon(Icons.cloud, size: 80, color: Colors.blue),
-
+                Icon(Icons.cloud, size: 80, color: colors.primary),
                 const SizedBox(height: 20),
-
                 const Text(
-                  "Cloud Guard",
-
+                  'Cloud Guard',
                   style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                 ),
-
                 const SizedBox(height: 8),
-
                 const Text(
-                  "Secure your cloud world",
-
+                  'Secure your cloud world',
                   style: TextStyle(color: Colors.grey, fontSize: 16),
                 ),
-
                 const SizedBox(height: 40),
-
-                // =================================================
-                // EMAIL
-                // =================================================
                 TextField(
                   controller: emailController,
-
                   keyboardType: TextInputType.emailAddress,
-
-                  decoration: InputDecoration(
-                    labelText: "Email",
-
-                    prefixIcon: const Icon(Icons.email),
-
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
+                  style: TextStyle(color: colors.onSurface),
+                  cursorColor: colors.primary,
+                  decoration: fieldDecoration(
+                    context: context,
+                    label: 'Email',
+                    icon: Icons.email,
                   ),
                 ),
-
                 const SizedBox(height: 20),
-
-                // =================================================
-                // PASSWORD
-                // =================================================
                 TextField(
                   controller: passwordController,
-
-                  // Eye button ke according
-                  // password show/hide hoga
                   obscureText: !isPasswordVisible,
-
-                  decoration: InputDecoration(
-                    labelText: "Password",
-
-                    prefixIcon: const Icon(Icons.lock),
-
-                    // 👁️ EYE BUTTON
+                  style: TextStyle(color: colors.onSurface),
+                  cursorColor: colors.primary,
+                  decoration: fieldDecoration(
+                    context: context,
+                    label: 'Password',
+                    icon: Icons.lock,
                     suffixIcon: IconButton(
                       icon: Icon(
                         isPasswordVisible
                             ? Icons.visibility
                             : Icons.visibility_off,
                       ),
-
                       onPressed: () {
                         setState(() {
                           isPasswordVisible = !isPasswordVisible;
                         });
                       },
                     ),
-
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
                   ),
                 ),
-
-                // =================================================
-                // FORGOT PASSWORD
-                // =================================================
                 Align(
                   alignment: Alignment.centerRight,
-
                   child: TextButton(
                     onPressed: isResettingPassword ? null : resetPassword,
-
                     child: isResettingPassword
                         ? const SizedBox(
                             width: 18,
                             height: 18,
-
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text("Forgot Password?"),
+                        : const Text('Forgot Password?'),
                   ),
                 ),
-
                 const SizedBox(height: 10),
-
-                // =================================================
-                // LOGIN BUTTON
-                // =================================================
                 SizedBox(
                   width: double.infinity,
-
                   height: 55,
-
                   child: ElevatedButton(
                     onPressed: isLoading ? null : loginUser,
-
                     child: isLoading
                         ? const CircularProgressIndicator()
                         : const Text(
-                            "Login",
-
+                            'Login',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -286,31 +248,22 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                   ),
                 ),
-
                 const SizedBox(height: 20),
-
-                // =================================================
-                // CREATE ACCOUNT
-                // =================================================
                 Wrap(
                   alignment: WrapAlignment.center,
                   crossAxisAlignment: WrapCrossAlignment.center,
-
                   children: [
                     const Text("Don't have an account?"),
-
                     TextButton(
                       onPressed: () {
                         Navigator.push(
                           context,
-
                           MaterialPageRoute(
                             builder: (context) => const SignupPage(),
                           ),
                         );
                       },
-
-                      child: const Text("Create Account"),
+                      child: const Text('Create Account'),
                     ),
                   ],
                 ),
