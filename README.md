@@ -20,9 +20,9 @@ https://arunvishwakarma1307-wq.github.io/Cloud-Guard/
 
 ### 📱 Android APK
 
-https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/download/v1.0.4/app-release.apk
+https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/download/v1.0.5/app-release.apk
 
-[View Android Release v1.0.4](https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/tag/v1.0.4 )
+[View Android Release v1.0.5](https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/tag/v1.0.5)
 
 
 
@@ -49,6 +49,7 @@ Cloud Guard is currently in **MVP development**.
 | Icon | Feature | Description |
 |---|---|---|
 | 🔐 | Authentication | Email/password registration, login, logout, password reset, and session routing through Firebase Authentication. |
+| 🔒 | App Lock PIN | PIN-based app lock protection to add an additional layer of security when accessing the application. |
 | ✅ | Account security | A transparent account-setup summary based only on Firebase account facts. It is not a risk or threat score. |
 | 📄 | PDF validation | Case-insensitive `.pdf` validation, `%PDF-` signature checking, and a 10 MB size limit. |
 | 🗂️ | Local workspace | Add multiple validated PDFs to a temporary in-memory workspace without Firebase billing. |
@@ -58,7 +59,6 @@ Cloud Guard is currently in **MVP development**.
 | 📖 | PDF reader | Full-screen single-page PDF reader with readable default zoom, Zoom In, Zoom Out, Reset Zoom, page selection, text selection, and smooth vertical scrolling. |
 | 🎨 | Theme settings | Persistent Light, Dark, and System theme options available from the Settings page. |
 | 🔐 | Readable authentication forms | Theme-aware email, password, and confirm-password fields with clear text, icons, labels, backgrounds, and borders in Light, Dark, and System modes. |
-
 
 
 ## 🖥️ Current Screens
@@ -276,7 +276,7 @@ For each feature, inspect the relevant files first, make a small scoped change, 
 - **Task 18:** Improved the PDF preview with a full-screen single-page viewer, readable page display, page navigation, zoom, and scrolling.
 - **Task 19:** Improved the full-screen PDF reader with clearer default readability, higher zoom support, page selection, text selection, and smoother vertical scrolling.
 - **Task 20:** Added persistent Light, Dark, and System theme settings and improved authentication form readability across all theme modes.
-
+- **Task 21:** Added App Lock PIN protection to improve application security.
 
 
 

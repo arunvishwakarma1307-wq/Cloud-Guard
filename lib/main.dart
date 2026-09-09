@@ -1,24 +1,39 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'app_lock_controller.dart';
+import 'app_lock_page.dart';
+import 'app_lock_recovery_page.dart';
 import 'firebase_options.dart';
 import 'home_page.dart';
 import 'login_page.dart';
 import 'theme_controller.dart';
 import 'update_prompt.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await themeController.ready;
+  await appLockController.ready;
 
-  runApp(const CloudGuardApp());
+  runApp(CloudGuardApp(emailRecoveryLink: _emailRecoveryLink()));
+}
+
+String? _emailRecoveryLink() {
+  if (!kIsWeb) return null;
+
+  final link = Uri.base.toString();
+  if (!FirebaseAuth.instance.isSignInWithEmailLink(link)) return null;
+  return link;
 }
 
 class CloudGuardApp extends StatelessWidget {
-  const CloudGuardApp({super.key});
+  const CloudGuardApp({super.key, this.emailRecoveryLink});
+
+  final String? emailRecoveryLink;
 
   @override
   Widget build(BuildContext context) {
@@ -41,18 +56,45 @@ class CloudGuardApp extends StatelessWidget {
             ),
             useMaterial3: true,
           ),
-          home: const AuthGate(),
+          home: AuthGate(emailRecoveryLink: emailRecoveryLink),
         );
       },
     );
   }
 }
 
-class AuthGate extends StatelessWidget {
-  const AuthGate({super.key});
+class AuthGate extends StatefulWidget {
+  const AuthGate({super.key, this.emailRecoveryLink});
+
+  final String? emailRecoveryLink;
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  late bool _isRecovering;
+
+  @override
+  void initState() {
+    super.initState();
+    _isRecovering = widget.emailRecoveryLink != null;
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isRecovering) {
+      return AppLockRecoveryPage(
+        emailLink: widget.emailRecoveryLink!,
+        onCompleted: () {
+          if (!mounted) return;
+          setState(() {
+            _isRecovering = false;
+          });
+        },
+      );
+    }
+
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
@@ -63,7 +105,9 @@ class AuthGate extends StatelessWidget {
         }
 
         if (snapshot.hasData) {
-          return const UpdatePrompt(child: CloudGuardHome());
+          return const UpdatePrompt(
+            child: AppLockGate(child: CloudGuardHome()),
+          );
         }
 
         return const LoginPage();
