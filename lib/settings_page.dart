@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'app_lock_controller.dart';
+import 'notification_controller.dart';
 import 'security_settings_page.dart';
 import 'theme_controller.dart';
 
@@ -80,18 +81,21 @@ class SettingsPage extends StatelessWidget {
                   onPressed: () {
                     final pin = pinController.text.trim();
                     final confirmation = confirmController.text.trim();
+
                     if (!RegExp(r'^\d{4,6}$').hasMatch(pin)) {
                       setDialogState(() {
                         errorMessage = 'PIN must contain 4 to 6 digits.';
                       });
                       return;
                     }
+
                     if (pin != confirmation) {
                       setDialogState(() {
                         errorMessage = 'PINs do not match.';
                       });
                       return;
                     }
+
                     Navigator.of(dialogContext).pop(pin);
                   },
                   child: Text(confirmLabel),
@@ -105,6 +109,7 @@ class SettingsPage extends StatelessWidget {
 
     pinController.dispose();
     confirmController.dispose();
+
     return result;
   }
 
@@ -114,6 +119,7 @@ class SettingsPage extends StatelessWidget {
       title: 'Set App Lock PIN',
       confirmLabel: 'Enable',
     );
+
     if (pin == null) return;
 
     await appLockController.enableWithPin(pin);
@@ -125,6 +131,7 @@ class SettingsPage extends StatelessWidget {
       title: 'Change App Lock PIN',
       confirmLabel: 'Save',
     );
+
     if (pin == null) return;
 
     await appLockController.changePin(pin);
@@ -229,9 +236,13 @@ class SettingsPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 15),
+
                     Card(
                       child: ListTile(
-                        leading: const Icon(Icons.person, color: Colors.blue),
+                        leading: const Icon(
+                          Icons.person,
+                          color: Colors.blue,
+                        ),
                         title: const Text('Logged in user'),
                         subtitle: Text(
                           user?.email ?? 'No email',
@@ -240,7 +251,9 @@ class SettingsPage extends StatelessWidget {
                         ),
                       ),
                     ),
+
                     const SizedBox(height: 25),
+
                     const Text(
                       'Preferences',
                       style: TextStyle(
@@ -248,7 +261,9 @@ class SettingsPage extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+
                     const SizedBox(height: 15),
+
                     Card(
                       child: ListTile(
                         leading: Icon(
@@ -260,25 +275,38 @@ class SettingsPage extends StatelessWidget {
                         title: const Text('App theme'),
                         subtitle: AnimatedBuilder(
                           animation: themeController,
-                          builder: (context, _) =>
-                              Text(_themeLabel(themeController.themeMode)),
+                          builder: (context, _) {
+                            return Text(
+                              _themeLabel(themeController.themeMode),
+                            );
+                          },
                         ),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 18),
+                        trailing: const Icon(
+                          Icons.arrow_forward_ios,
+                          size: 18,
+                        ),
                         onTap: () => _showThemePicker(context),
                       ),
                     ),
+
                     const SizedBox(height: 15),
+
                     AnimatedBuilder(
                       animation: appLockController,
                       builder: (context, _) {
                         final isEnabled = appLockController.enabled;
+
                         return Card(
                           child: Column(
                             children: [
                               SwitchListTile(
                                 secondary: Icon(
-                                  isEnabled ? Icons.lock : Icons.lock_open,
-                                  color: isEnabled ? Colors.green : Colors.grey,
+                                  isEnabled
+                                      ? Icons.lock
+                                      : Icons.lock_open,
+                                  color: isEnabled
+                                      ? Colors.green
+                                      : Colors.grey,
                                 ),
                                 title: const Text('App Lock'),
                                 subtitle: Text(
@@ -295,35 +323,102 @@ class SettingsPage extends StatelessWidget {
                                   }
                                 },
                               ),
+
                               if (isEnabled)
                                 ListTile(
                                   leading: const Icon(Icons.password),
-                                  title: const Text('Change App Lock PIN'),
+                                  title: const Text(
+                                    'Change App Lock PIN',
+                                  ),
                                   trailing: const Icon(
                                     Icons.arrow_forward_ios,
                                     size: 18,
                                   ),
-                                  onTap: () => _changeAppLockPin(context),
+                                  onTap: () =>
+                                      _changeAppLockPin(context),
                                 ),
                             ],
                           ),
                         );
                       },
                     ),
+
                     const SizedBox(height: 15),
-                    Card(
-                      child: SwitchListTile(
-                        secondary: const Icon(
-                          Icons.notifications,
-                          color: Colors.orange,
-                        ),
-                        title: const Text('Notifications'),
-                        subtitle: const Text('Enable or disable notifications'),
-                        value: true,
-                        onChanged: (value) {},
-                      ),
+
+                    // Functional Notifications
+                    AnimatedBuilder(
+                      animation: notificationController,
+                      builder: (context, _) {
+                        final isEnabled =
+                            notificationController.enabled;
+
+                        return Card(
+                          child: Column(
+                            children: [
+                              SwitchListTile(
+                                secondary: Icon(
+                                  isEnabled
+                                      ? Icons.notifications_active
+                                      : Icons.notifications_off,
+                                  color: isEnabled
+                                      ? Colors.orange
+                                      : Colors.grey,
+                                ),
+                                title: const Text('Notifications'),
+                                subtitle: Text(
+                                  isEnabled
+                                      ? 'Notifications are enabled'
+                                      : 'Notifications are disabled',
+                                ),
+                                value: isEnabled,
+                                onChanged: (value) async {
+                                  final success =
+                                      await notificationController
+                                          .setEnabled(value);
+
+                                  if (!context.mounted) return;
+
+                                  if (!success && value) {
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Notification permission was not granted.',
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+
+                              if (isEnabled)
+                                ListTile(
+                                  leading: const Icon(
+                                    Icons.notifications_active,
+                                  ),
+                                  title: const Text(
+                                    'Test notification',
+                                  ),
+                                  subtitle: const Text(
+                                    'Send a test notification to verify that it works',
+                                  ),
+                                  trailing: const Icon(
+                                    Icons.arrow_forward_ios,
+                                    size: 18,
+                                  ),
+                                  onTap: () async {
+                                    await notificationController
+                                        .showTestNotification();
+                                  },
+                                ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
+
                     const SizedBox(height: 15),
+
                     Card(
                       child: ListTile(
                         leading: const Icon(
@@ -331,8 +426,13 @@ class SettingsPage extends StatelessWidget {
                           color: Colors.green,
                         ),
                         title: const Text('Security Settings'),
-                        subtitle: const Text('Manage account security'),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 18),
+                        subtitle: const Text(
+                          'Manage account security',
+                        ),
+                        trailing: const Icon(
+                          Icons.arrow_forward_ios,
+                          size: 18,
+                        ),
                         onTap: () {
                           Navigator.push(
                             context,
@@ -344,8 +444,11 @@ class SettingsPage extends StatelessWidget {
                         },
                       ),
                     ),
+
                     const Spacer(),
+
                     const SizedBox(height: 20),
+
                     SizedBox(
                       width: double.infinity,
                       height: 55,

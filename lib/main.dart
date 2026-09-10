@@ -9,29 +9,45 @@ import 'app_lock_recovery_page.dart';
 import 'firebase_options.dart';
 import 'home_page.dart';
 import 'login_page.dart';
+import 'notification_controller.dart';
 import 'theme_controller.dart';
 import 'update_prompt.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   await themeController.ready;
   await appLockController.ready;
+  await notificationController.readyFuture;
 
-  runApp(CloudGuardApp(emailRecoveryLink: _emailRecoveryLink()));
+  runApp(
+    CloudGuardApp(
+      emailRecoveryLink: _emailRecoveryLink(),
+    ),
+  );
 }
 
 String? _emailRecoveryLink() {
   if (!kIsWeb) return null;
 
   final link = Uri.base.toString();
-  if (!FirebaseAuth.instance.isSignInWithEmailLink(link)) return null;
+
+  if (!FirebaseAuth.instance.isSignInWithEmailLink(link)) {
+    return null;
+  }
+
   return link;
 }
 
 class CloudGuardApp extends StatelessWidget {
-  const CloudGuardApp({super.key, this.emailRecoveryLink});
+  const CloudGuardApp({
+    super.key,
+    this.emailRecoveryLink,
+  });
 
   final String? emailRecoveryLink;
 
@@ -45,7 +61,9 @@ class CloudGuardApp extends StatelessWidget {
           title: 'Cloud Guard',
           themeMode: themeController.themeMode,
           theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.blue,
+            ),
             scaffoldBackgroundColor: const Color(0xfff6f8ff),
             useMaterial3: true,
           ),
@@ -56,7 +74,9 @@ class CloudGuardApp extends StatelessWidget {
             ),
             useMaterial3: true,
           ),
-          home: AuthGate(emailRecoveryLink: emailRecoveryLink),
+          home: AuthGate(
+            emailRecoveryLink: emailRecoveryLink,
+          ),
         );
       },
     );
@@ -64,7 +84,10 @@ class CloudGuardApp extends StatelessWidget {
 }
 
 class AuthGate extends StatefulWidget {
-  const AuthGate({super.key, this.emailRecoveryLink});
+  const AuthGate({
+    super.key,
+    this.emailRecoveryLink,
+  });
 
   final String? emailRecoveryLink;
 
@@ -78,6 +101,7 @@ class _AuthGateState extends State<AuthGate> {
   @override
   void initState() {
     super.initState();
+
     _isRecovering = widget.emailRecoveryLink != null;
   }
 
@@ -88,6 +112,7 @@ class _AuthGateState extends State<AuthGate> {
         emailLink: widget.emailRecoveryLink!,
         onCompleted: () {
           if (!mounted) return;
+
           setState(() {
             _isRecovering = false;
           });
@@ -100,13 +125,17 @@ class _AuthGateState extends State<AuthGate> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
           );
         }
 
         if (snapshot.hasData) {
           return const UpdatePrompt(
-            child: AppLockGate(child: CloudGuardHome()),
+            child: AppLockGate(
+              child: CloudGuardHome(),
+            ),
           );
         }
 
