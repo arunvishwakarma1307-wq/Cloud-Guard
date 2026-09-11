@@ -20,10 +20,9 @@ https://arunvishwakarma1307-wq.github.io/Cloud-Guard/
 
 ### 📱 Android APK
 
-https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/download/v1.0.5/app-release.apk
+https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/download/v1.0.6/app-release.apk
 
-[View Android Release v1.0.5](https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/tag/v1.0.5)
-
+[View Android Release v1.0.6](https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/tag/v1.0.6)
 > Android users: Download the APK, open it from the Downloads folder, allow installation from this source if Android asks for permission, install it, and then open Cloud Guard. Windows users should use the Web Demo because Windows cannot open Android APK files directly.
 
 ## 📌 Project Status
@@ -42,6 +41,7 @@ Cloud Guard is currently in **MVP development**.
 | Flutter Web Demo | Deployed and verified through GitHub Pages |
 | Android release APK | Built, installed, and tested on an Android device |
 | Firebase Storage cloud uploads | Unavailable; Storage is not enabled or configured |
+| Google Sign-In | Available and tested |
 
 > **Storage honesty:** Cloud Guard does not simulate cloud uploads, upload progress, cloud quota, stored cloud files, or successful cloud-upload messages. Firebase Storage is not currently enabled or configured for live uploads.
 
@@ -61,6 +61,7 @@ Cloud Guard is currently in **MVP development**.
 | 📖 | PDF reader | Full-screen single-page PDF reader with readable default zoom, Zoom In, Zoom Out, Reset Zoom, page selection, text selection, and smooth vertical scrolling. |
 | 🎨 | Theme settings | Persistent Light, Dark, and System theme options available from the Settings page. |
 | 🔐 | Readable authentication forms | Theme-aware email, password, and confirm-password fields with clear text, icons, labels, backgrounds, and borders in Light, Dark, and System modes. |
+| 🔐 Google Sign-In | Google account authentication | Available and tested |
 
 ## 🖥️ Current Screens
 
@@ -298,6 +299,7 @@ For each feature, inspect the relevant files first, make a small scoped change, 
 * **Task 20:** Added persistent Light, Dark, and System theme settings and improved authentication form readability across all theme modes.
 * **Task 21:** Added App Lock PIN protection to improve application security.
 * **Task 22:** Added functional browser notifications with persistent enable/disable settings, browser notification permission handling, and a test notification feature.
+* **Task 23:** Added Google Sign-In authentication with Firebase, including Android SHA-1 configuration and successful Android/Web Google account login testing.
 
 ## 🤝 Contributing
 
