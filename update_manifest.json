@@ -1,5 +1,5 @@
 ﻿{
-  "version": "1.0.4+5",
-  "downloadUrl": "https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/download/v1.0.4/app-release.apk",
-  "releaseNotes": "Added persistent local Security Activity History and improved the full-screen single-page PDF viewer."
+  "version": "1.0.6+7",
+  "downloadUrl": "https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/download/v1.0.6/app-release.apk",
+  "releaseNotes": "Added Google Sign-In authentication and functional browser notifications to Cloud Guard."
 }
