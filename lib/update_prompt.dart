@@ -63,10 +63,27 @@ class _UpdatePromptState extends State<UpdatePrompt> {
               decoration: BoxDecoration(
                 color: const Color(0xFF111116),
                 borderRadius: BorderRadius.circular(28),
+
+                // Clearly visible outer border
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.08),
+                  color: const Color(0xFF9B5CFF).withValues(alpha: 0.75),
+                  width: 1.5,
                 ),
+
+                // Purple + blue outer glow
                 boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF9B5CFF).withValues(alpha: 0.22),
+                    blurRadius: 24,
+                    spreadRadius: 1,
+                  ),
+                  BoxShadow(
+                    color: const Color(0xFF4F8CFF).withValues(alpha: 0.16),
+                    blurRadius: 36,
+                    spreadRadius: 2,
+                  ),
+
+                  // Original black shadow
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.45),
                     blurRadius: 30,
@@ -85,7 +102,6 @@ class _UpdatePromptState extends State<UpdatePrompt> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // 3D Cloud Guard Robot
                     SizedBox(
                       height: 180,
                       width: double.infinity,
@@ -97,7 +113,6 @@ class _UpdatePromptState extends State<UpdatePrompt> {
 
                     const SizedBox(height: 8),
 
-                    // Title
                     const Text(
                       'New Update Available!',
                       textAlign: TextAlign.center,
@@ -111,7 +126,6 @@ class _UpdatePromptState extends State<UpdatePrompt> {
 
                     const SizedBox(height: 8),
 
-                    // Version
                     Text(
                       'Cloud Guard ${update.version}',
                       textAlign: TextAlign.center,
@@ -124,7 +138,6 @@ class _UpdatePromptState extends State<UpdatePrompt> {
 
                     const SizedBox(height: 22),
 
-                    // What's New heading
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Row(
@@ -142,7 +155,9 @@ class _UpdatePromptState extends State<UpdatePrompt> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
+
                           const SizedBox(width: 10),
+
                           const Text(
                             "What's New",
                             style: TextStyle(
@@ -157,7 +172,6 @@ class _UpdatePromptState extends State<UpdatePrompt> {
 
                     const SizedBox(height: 12),
 
-                    // Release notes
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
@@ -180,7 +194,6 @@ class _UpdatePromptState extends State<UpdatePrompt> {
 
                     const SizedBox(height: 22),
 
-                    // Update button
                     SizedBox(
                       width: double.infinity,
                       height: 54,
@@ -213,7 +226,8 @@ class _UpdatePromptState extends State<UpdatePrompt> {
                             ),
                           ),
                           onPressed: () async {
-                            final opened = await _checker.openDownloadUrl(
+                            final opened =
+                                await _checker.openDownloadUrl(
                               update.downloadUrl,
                             );
 
@@ -244,7 +258,6 @@ class _UpdatePromptState extends State<UpdatePrompt> {
 
                     const SizedBox(height: 10),
 
-                    // Later button
                     TextButton(
                       onPressed: () {
                         Navigator.of(dialogContext).pop();
@@ -261,7 +274,6 @@ class _UpdatePromptState extends State<UpdatePrompt> {
 
                     const SizedBox(height: 2),
 
-                    // Security note
                     Text(
                       'Download updates only from the official Cloud Guard release.',
                       textAlign: TextAlign.center,
