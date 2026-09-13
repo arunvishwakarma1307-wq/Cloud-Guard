@@ -1,5 +1,6 @@
 ﻿{
-  "version": "1.0.6+7",
-  "downloadUrl": "https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/download/v1.0.6/app-release.apk",
-  "releaseNotes": "Added Google Sign-In authentication and functional browser notifications to Cloud Guard."
+  "version": "1.0.7",
+  "buildNumber": "8",
+  "downloadUrl": "https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/download/v1.0.7/app-release.apk",
+  "releaseNotes": "Added Android biometric App Lock support and improved Settings theme compatibility."
 }

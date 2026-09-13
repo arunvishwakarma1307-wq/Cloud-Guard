@@ -193,11 +193,11 @@ class _AppLockPageState extends State<AppLockPage> {
             'Biometric authentication failed. Use your PIN instead.';
       });
     } finally {
-      if (!mounted) return;
-
-      setState(() {
-        _biometricAuthenticating = false;
-      });
+      if (mounted) {
+        setState(() {
+          _biometricAuthenticating = false;
+        });
+      }
     }
   }
 

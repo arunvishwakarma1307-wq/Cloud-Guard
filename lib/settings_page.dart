@@ -217,257 +217,247 @@ class SettingsPage extends StatelessWidget {
       ),
       body: SafeArea(
         top: false,
-        child: LayoutBuilder(
-          builder: (context, constraints) => SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: constraints.maxHeight - 40,
-              ),
-              child: IntrinsicHeight(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Account',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-
-                    Card(
-                      child: ListTile(
-                        leading: const Icon(
-                          Icons.person,
-                          color: Colors.blue,
-                        ),
-                        title: const Text('Logged in user'),
-                        subtitle: Text(
-                          user?.email ?? 'No email',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 25),
-
-                    const Text(
-                      'Preferences',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    Card(
-                      child: ListTile(
-                        leading: Icon(
-                          themeController.themeMode == ThemeMode.dark
-                              ? Icons.dark_mode
-                              : Icons.palette_outlined,
-                          color: Colors.indigo,
-                        ),
-                        title: const Text('App theme'),
-                        subtitle: AnimatedBuilder(
-                          animation: themeController,
-                          builder: (context, _) {
-                            return Text(
-                              _themeLabel(themeController.themeMode),
-                            );
-                          },
-                        ),
-                        trailing: const Icon(
-                          Icons.arrow_forward_ios,
-                          size: 18,
-                        ),
-                        onTap: () => _showThemePicker(context),
-                      ),
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    AnimatedBuilder(
-                      animation: appLockController,
-                      builder: (context, _) {
-                        final isEnabled = appLockController.enabled;
-
-                        return Card(
-                          child: Column(
-                            children: [
-                              SwitchListTile(
-                                secondary: Icon(
-                                  isEnabled
-                                      ? Icons.lock
-                                      : Icons.lock_open,
-                                  color: isEnabled
-                                      ? Colors.green
-                                      : Colors.grey,
-                                ),
-                                title: const Text('App Lock'),
-                                subtitle: Text(
-                                  isEnabled
-                                      ? 'PIN protection is enabled'
-                                      : 'Optional PIN protection for this app',
-                                ),
-                                value: isEnabled,
-                                onChanged: (value) {
-                                  if (value) {
-                                    _setUpAppLock(context);
-                                  } else {
-                                    _disableAppLock(context);
-                                  }
-                                },
-                              ),
-
-                              if (isEnabled)
-                                ListTile(
-                                  leading: const Icon(Icons.password),
-                                  title: const Text(
-                                    'Change App Lock PIN',
-                                  ),
-                                  trailing: const Icon(
-                                    Icons.arrow_forward_ios,
-                                    size: 18,
-                                  ),
-                                  onTap: () =>
-                                      _changeAppLockPin(context),
-                                ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    // Functional Notifications
-                    AnimatedBuilder(
-                      animation: notificationController,
-                      builder: (context, _) {
-                        final isEnabled =
-                            notificationController.enabled;
-
-                        return Card(
-                          child: Column(
-                            children: [
-                              SwitchListTile(
-                                secondary: Icon(
-                                  isEnabled
-                                      ? Icons.notifications_active
-                                      : Icons.notifications_off,
-                                  color: isEnabled
-                                      ? Colors.orange
-                                      : Colors.grey,
-                                ),
-                                title: const Text('Notifications'),
-                                subtitle: Text(
-                                  isEnabled
-                                      ? 'Notifications are enabled'
-                                      : 'Notifications are disabled',
-                                ),
-                                value: isEnabled,
-                                onChanged: (value) async {
-                                  final success =
-                                      await notificationController
-                                          .setEnabled(value);
-
-                                  if (!context.mounted) return;
-
-                                  if (!success && value) {
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Notification permission was not granted.',
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                },
-                              ),
-
-                              if (isEnabled)
-                                ListTile(
-                                  leading: const Icon(
-                                    Icons.notifications_active,
-                                  ),
-                                  title: const Text(
-                                    'Test notification',
-                                  ),
-                                  subtitle: const Text(
-                                    'Send a test notification to verify that it works',
-                                  ),
-                                  trailing: const Icon(
-                                    Icons.arrow_forward_ios,
-                                    size: 18,
-                                  ),
-                                  onTap: () async {
-                                    await notificationController
-                                        .showTestNotification();
-                                  },
-                                ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    Card(
-                      child: ListTile(
-                        leading: const Icon(
-                          Icons.security,
-                          color: Colors.green,
-                        ),
-                        title: const Text('Security Settings'),
-                        subtitle: const Text(
-                          'Manage account security',
-                        ),
-                        trailing: const Icon(
-                          Icons.arrow_forward_ios,
-                          size: 18,
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const SecuritySettingsPage(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-
-                    const Spacer(),
-
-                    const SizedBox(height: 20),
-
-                    SizedBox(
-                      width: double.infinity,
-                      height: 55,
-                      child: ElevatedButton.icon(
-                        onPressed: () => logout(context),
-                        icon: const Icon(Icons.logout),
-                        label: const Text(
-                          'Logout',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Account',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
+              const SizedBox(height: 15),
+
+              Card(
+                child: ListTile(
+                  leading: const Icon(
+                    Icons.person,
+                    color: Colors.blue,
+                  ),
+                  title: const Text('Logged in user'),
+                  subtitle: Text(
+                    user?.email ?? 'No email',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 25),
+
+              const Text(
+                'Preferences',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 15),
+
+              Card(
+                child: ListTile(
+                  leading: Icon(
+                    themeController.themeMode == ThemeMode.dark
+                        ? Icons.dark_mode
+                        : Icons.palette_outlined,
+                    color: Colors.indigo,
+                  ),
+                  title: const Text('App theme'),
+                  subtitle: AnimatedBuilder(
+                    animation: themeController,
+                    builder: (context, _) {
+                      return Text(
+                        _themeLabel(themeController.themeMode),
+                      );
+                    },
+                  ),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 18,
+                  ),
+                  onTap: () => _showThemePicker(context),
+                ),
+              ),
+
+              const SizedBox(height: 15),
+
+              AnimatedBuilder(
+                animation: appLockController,
+                builder: (context, _) {
+                  final isEnabled = appLockController.enabled;
+
+                  return Card(
+                    child: Column(
+                      children: [
+                        SwitchListTile(
+                          secondary: Icon(
+                            isEnabled
+                                ? Icons.lock
+                                : Icons.lock_open,
+                            color: isEnabled
+                                ? Colors.green
+                                : Colors.grey,
+                          ),
+                          title: const Text('App Lock'),
+                          subtitle: Text(
+                            isEnabled
+                                ? 'PIN protection is enabled'
+                                : 'Optional PIN protection for this app',
+                          ),
+                          value: isEnabled,
+                          onChanged: (value) {
+                            if (value) {
+                              _setUpAppLock(context);
+                            } else {
+                              _disableAppLock(context);
+                            }
+                          },
+                        ),
+
+                        if (isEnabled)
+                          ListTile(
+                            leading: const Icon(Icons.password),
+                            title: const Text(
+                              'Change App Lock PIN',
+                            ),
+                            trailing: const Icon(
+                              Icons.arrow_forward_ios,
+                              size: 18,
+                            ),
+                            onTap: () =>
+                                _changeAppLockPin(context),
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 15),
+
+              AnimatedBuilder(
+                animation: notificationController,
+                builder: (context, _) {
+                  final isEnabled =
+                      notificationController.enabled;
+
+                  return Card(
+                    child: Column(
+                      children: [
+                        SwitchListTile(
+                          secondary: Icon(
+                            isEnabled
+                                ? Icons.notifications_active
+                                : Icons.notifications_off,
+                            color: isEnabled
+                                ? Colors.orange
+                                : Colors.grey,
+                          ),
+                          title: const Text('Notifications'),
+                          subtitle: Text(
+                            isEnabled
+                                ? 'Notifications are enabled'
+                                : 'Notifications are disabled',
+                          ),
+                          value: isEnabled,
+                          onChanged: (value) async {
+                            final success =
+                                await notificationController
+                                    .setEnabled(value);
+
+                            if (!context.mounted) return;
+
+                            if (!success && value) {
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Notification permission was not granted.',
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+
+                        if (isEnabled)
+                          ListTile(
+                            leading: const Icon(
+                              Icons.notifications_active,
+                            ),
+                            title: const Text(
+                              'Test notification',
+                            ),
+                            subtitle: const Text(
+                              'Send a test notification to verify that it works',
+                            ),
+                            trailing: const Icon(
+                              Icons.arrow_forward_ios,
+                              size: 18,
+                            ),
+                            onTap: () async {
+                              await notificationController
+                                  .showTestNotification();
+                            },
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 15),
+
+              Card(
+                child: ListTile(
+                  leading: const Icon(
+                    Icons.security,
+                    color: Colors.green,
+                  ),
+                  title: const Text('Security Settings'),
+                  subtitle: const Text(
+                    'Manage account security',
+                  ),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 18,
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const SecuritySettingsPage(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 30),
+
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton.icon(
+                  onPressed: () => logout(context),
+                  icon: const Icon(Icons.logout),
+                  label: const Text(
+                    'Logout',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+            ],
           ),
         ),
       ),
