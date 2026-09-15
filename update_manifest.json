@@ -1,6 +1,6 @@
 ﻿{
-  "version": "1.0.7",
-  "buildNumber": "8",
-  "downloadUrl": "https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/download/v1.0.7/app-release.apk",
-  "releaseNotes": "Added Android biometric App Lock support and improved Settings theme compatibility."
+  "version": "1.0.8",
+  "buildNumber": "9",
+  "downloadUrl": "https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/download/v1.0.8/app-release.apk",
+  "releaseNotes": "Added configurable App Lock Auto-Lock, improved the Android update popup, and added Cloud Guard robot artwork."
 }
