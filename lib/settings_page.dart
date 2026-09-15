@@ -80,11 +80,13 @@ class SettingsPage extends StatelessWidget {
                 FilledButton(
                   onPressed: () {
                     final pin = pinController.text.trim();
-                    final confirmation = confirmController.text.trim();
+                    final confirmation =
+                        confirmController.text.trim();
 
                     if (!RegExp(r'^\d{4,6}$').hasMatch(pin)) {
                       setDialogState(() {
-                        errorMessage = 'PIN must contain 4 to 6 digits.';
+                        errorMessage =
+                            'PIN must contain 4 to 6 digits.';
                       });
                       return;
                     }
@@ -147,11 +149,13 @@ class SettingsPage extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
+            onPressed: () =>
+                Navigator.of(dialogContext).pop(false),
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
+            onPressed: () =>
+                Navigator.of(dialogContext).pop(true),
             child: const Text('Disable'),
           ),
         ],
@@ -199,6 +203,48 @@ class SettingsPage extends StatelessWidget {
 
     if (selectedMode != null) {
       await themeController.setThemeMode(selectedMode);
+    }
+  }
+
+  Future<void> _showAutoLockPicker(BuildContext context) async {
+    final selectedDuration =
+        await showDialog<AutoLockDuration>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Auto Lock'),
+          content: AnimatedBuilder(
+            animation: appLockController,
+            builder: (context, _) {
+              return RadioGroup<AutoLockDuration>(
+                groupValue: appLockController.autoLockDuration,
+                onChanged: (value) {
+                  if (value != null) {
+                    Navigator.of(dialogContext).pop(value);
+                  }
+                },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: AutoLockDuration.values
+                      .map((duration) {
+                        return RadioListTile<AutoLockDuration>(
+                          value: duration,
+                          title: Text(duration.label),
+                        );
+                      })
+                      .toList(growable: false),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+
+    if (selectedDuration != null) {
+      await appLockController.setAutoLockDuration(
+        selectedDuration,
+      );
     }
   }
 
@@ -330,6 +376,29 @@ class SettingsPage extends StatelessWidget {
                             ),
                             onTap: () =>
                                 _changeAppLockPin(context),
+                          ),
+
+                        if (isEnabled)
+                          ListTile(
+                            leading: const Icon(
+                              Icons.timer_outlined,
+                            ),
+                            title: const Text('Auto Lock'),
+                            subtitle: AnimatedBuilder(
+                              animation: appLockController,
+                              builder: (context, _) {
+                                return Text(
+                                  appLockController
+                                      .autoLockDuration.label,
+                                );
+                              },
+                            ),
+                            trailing: const Icon(
+                              Icons.arrow_forward_ios,
+                              size: 18,
+                            ),
+                            onTap: () =>
+                                _showAutoLockPicker(context),
                           ),
                       ],
                     ),

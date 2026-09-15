@@ -38,255 +38,340 @@ class _UpdatePromptState extends State<UpdatePrompt> {
 
     if (!mounted || update == null) return;
 
+    final availableUpdate = update;
+
     securityActivityLog.record(
       title: 'Update detected',
       description:
-          'A newer Cloud Guard release ${update.version} is available.',
+          'A newer Cloud Guard release ${availableUpdate.version} is available.',
     );
 
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.84),
       builder: (dialogContext) {
         return Dialog(
           backgroundColor: Colors.transparent,
+          elevation: 0,
           insetPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 24,
+            horizontal: 14,
+            vertical: 18,
           ),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: 430,
-              maxHeight: 700,
-            ),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF111116),
-                borderRadius: BorderRadius.circular(28),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final screenWidth = MediaQuery.sizeOf(context).width;
+              final screenHeight = MediaQuery.sizeOf(context).height;
 
-                // Clearly visible outer border
-                border: Border.all(
-                  color: const Color(0xFF9B5CFF).withValues(alpha: 0.75),
-                  width: 1.5,
+              final popupWidth = screenWidth > 470
+                  ? 430.0
+                  : screenWidth - 28;
+
+              final robotHeight = screenHeight < 700
+                  ? 150.0
+                  : 205.0;
+
+              return ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: popupWidth,
+                  maxHeight: screenHeight - 36,
                 ),
-
-                // Purple + blue outer glow
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF9B5CFF).withValues(alpha: 0.22),
-                    blurRadius: 24,
-                    spreadRadius: 1,
-                  ),
-                  BoxShadow(
-                    color: const Color(0xFF4F8CFF).withValues(alpha: 0.16),
-                    blurRadius: 36,
-                    spreadRadius: 2,
-                  ),
-
-                  // Original black shadow
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.45),
-                    blurRadius: 30,
-                    spreadRadius: 2,
-                    offset: const Offset(0, 12),
-                  ),
-                ],
-              ),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
-                  24,
-                  20,
-                  24,
-                  24,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      height: 180,
-                      width: double.infinity,
-                      child: Image.asset(
-                        'assets/images/update_robot.png',
-                        fit: BoxFit.contain,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF07080D),
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(
+                      color: const Color(0xFF9B5CFF).withValues(
+                        alpha: 0.82,
                       ),
+                      width: 1.6,
                     ),
-
-                    const SizedBox(height: 8),
-
-                    const Text(
-                      'New Update Available!',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.2,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF9B5CFF).withValues(
+                          alpha: 0.30,
+                        ),
+                        blurRadius: 28,
+                        spreadRadius: 1,
                       ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    Text(
-                      'Cloud Guard ${update.version}',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Color(0xFFE56BFF),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                      BoxShadow(
+                        color: const Color(0xFF4F8CFF).withValues(
+                          alpha: 0.22,
+                        ),
+                        blurRadius: 42,
+                        spreadRadius: 2,
                       ),
+                      BoxShadow(
+                        color: Colors.black.withValues(
+                          alpha: 0.60,
+                        ),
+                        blurRadius: 34,
+                        spreadRadius: 4,
+                        offset: const Offset(0, 14),
+                      ),
+                    ],
+                  ),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(
+                      22,
+                      20,
+                      22,
+                      22,
                     ),
-
-                    const SizedBox(height: 22),
-
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 4,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFFFF4FA3),
-                                  Color(0xFF9B5CFF),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // ------------------------------------------------
+                        // ROBOT
+                        // ------------------------------------------------
+                        SizedBox(
+                          height: robotHeight,
+                          width: double.infinity,
+                          child: Image.asset(
+                            'assets/images/update_robot.png',
+                            fit: BoxFit.contain,
                           ),
+                        ),
 
-                          const SizedBox(width: 10),
+                        const SizedBox(height: 8),
 
-                          const Text(
-                            "What's New",
+                        // ------------------------------------------------
+                        // MAIN TITLE
+                        // ------------------------------------------------
+                        const FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'New Update Available!',
+                            textAlign: TextAlign.center,
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 30,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.045),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.06),
                         ),
-                      ),
-                      child: Text(
-                        update.releaseNotes,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.78),
-                          fontSize: 14,
-                          height: 1.5,
+
+                        const SizedBox(height: 10),
+
+                        // ------------------------------------------------
+                        // VERSION
+                        // ------------------------------------------------
+                        ShaderMask(
+                          shaderCallback: (bounds) {
+                            return const LinearGradient(
+                              colors: [
+                                Color(0xFFFF4FA3),
+                                Color(0xFFB95CFF),
+                                Color(0xFF4F8CFF),
+                              ],
+                            ).createShader(bounds);
+                          },
+                          child: Text(
+                            'Cloud Guard ${availableUpdate.version}',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
 
-                    const SizedBox(height: 22),
+                        const SizedBox(height: 24),
 
-                    SizedBox(
-                      width: double.infinity,
-                      height: 54,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFFFF4FA3),
-                              Color(0xFF9B5CFF),
+                        // ------------------------------------------------
+                        // WHAT'S NEW
+                        // ------------------------------------------------
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 5,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Color(0xFFFF4FA3),
+                                      Color(0xFF9B5CFF),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(
+                                        0xFFFF4FA3,
+                                      ).withValues(alpha: 0.35),
+                                      blurRadius: 10,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              const Text(
+                                "What's New",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 23,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
                             ],
                           ),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
+                        ),
+
+                        const SizedBox(height: 13),
+
+                        // ------------------------------------------------
+                        // RELEASE NOTES CARD
+                        // ------------------------------------------------
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.fromLTRB(
+                            18,
+                            17,
+                            18,
+                            17,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF11131B),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
                               color: const Color(
-                                0xFFFF4FA3,
-                              ).withValues(alpha: 0.22),
-                              blurRadius: 18,
-                              offset: const Offset(0, 7),
-                            ),
-                          ],
-                        ),
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            foregroundColor: Colors.white,
-                            shadowColor: Colors.transparent,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                                0xFF7180B0,
+                              ).withValues(alpha: 0.30),
+                              width: 1.2,
                             ),
                           ),
-                          onPressed: () async {
-                            final opened =
-                                await _checker.openDownloadUrl(
-                              update.downloadUrl,
-                            );
-
-                            if (!dialogContext.mounted) return;
-
-                            Navigator.of(dialogContext).pop();
-
-                            if (!opened && mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Unable to open the official update link.',
-                                  ),
-                                ),
-                              );
-                            }
-                          },
-                          child: const Text(
-                            'Update App Now',
-                            style: TextStyle(
+                          child: Text(
+                            availableUpdate.releaseNotes,
+                            style: const TextStyle(
+                              color: Color(0xFFD6D9EA),
                               fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                              height: 1.55,
                             ),
                           ),
                         ),
-                      ),
-                    ),
 
-                    const SizedBox(height: 10),
+                        const SizedBox(height: 25),
 
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(dialogContext).pop();
-                      },
-                      child: Text(
-                        'Later',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.55),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                        // ------------------------------------------------
+                        // UPDATE BUTTON
+                        // ------------------------------------------------
+                        SizedBox(
+                          width: double.infinity,
+                          height: 62,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                                colors: [
+                                  Color(0xFFFF3FA4),
+                                  Color(0xFFB84CFF),
+                                  Color(0xFF496CFF),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(19),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(
+                                    0xFFFF3FA4,
+                                  ).withValues(alpha: 0.28),
+                                  blurRadius: 22,
+                                  offset: const Offset(0, 8),
+                                ),
+                                BoxShadow(
+                                  color: const Color(
+                                    0xFF496CFF,
+                                  ).withValues(alpha: 0.20),
+                                  blurRadius: 25,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                foregroundColor: Colors.white,
+                                shadowColor: Colors.transparent,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(19),
+                                ),
+                              ),
+                              onPressed: () async {
+                                final opened =
+                                    await _checker.openDownloadUrl(
+                                  availableUpdate.downloadUrl,
+                                );
+
+                                if (!dialogContext.mounted) return;
+
+                                Navigator.of(dialogContext).pop();
+
+                                if (!opened && mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Unable to open the official update link.',
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                              child: const Text(
+                                'Update App Now',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
 
-                    const SizedBox(height: 2),
+                        const SizedBox(height: 12),
 
-                    Text(
-                      'Download updates only from the official Cloud Guard release.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.35),
-                        fontSize: 11,
-                        height: 1.4,
-                      ),
+                        // ------------------------------------------------
+                        // LATER
+                        // ------------------------------------------------
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop();
+                          },
+                          child: Text(
+                            'Later',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.68),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 3),
+
+                        // ------------------------------------------------
+                        // SECURITY MESSAGE
+                        // ------------------------------------------------
+                        Text(
+                          'Download updates only from the official Cloud Guard release.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.40),
+                            fontSize: 12,
+                            height: 1.45,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         );
       },

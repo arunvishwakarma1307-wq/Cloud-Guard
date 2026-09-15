@@ -20,8 +20,105 @@ class AppLockGate extends StatefulWidget {
   State<AppLockGate> createState() => _AppLockGateState();
 }
 
-class _AppLockGateState extends State<AppLockGate> {
+class _AppLockGateState extends State<AppLockGate>
+    with WidgetsBindingObserver {
   bool _isUnlocked = false;
+  DateTime? _backgroundedAt;
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.paused:
+        _handleAppBackgrounded();
+
+      case AppLifecycleState.resumed:
+        _handleAppResumed();
+
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+      case AppLifecycleState.hidden:
+        break;
+    }
+  }
+
+  void _handleAppBackgrounded() {
+    if (!appLockController.enabled) {
+      return;
+    }
+
+    final autoLockAfter = appLockController.autoLockAfter;
+
+    if (autoLockAfter == null) {
+      return;
+    }
+
+    if (autoLockAfter == Duration.zero) {
+      _lockApp();
+
+      return;
+    }
+
+    _backgroundedAt = DateTime.now();
+  }
+
+  void _handleAppResumed() {
+    if (!appLockController.enabled) {
+      _backgroundedAt = null;
+
+      return;
+    }
+
+    final autoLockAfter = appLockController.autoLockAfter;
+
+    if (autoLockAfter == null) {
+      _backgroundedAt = null;
+
+      return;
+    }
+
+    if (autoLockAfter == Duration.zero) {
+      _lockApp();
+
+      return;
+    }
+
+    final backgroundedAt = _backgroundedAt;
+
+    if (backgroundedAt == null) {
+      return;
+    }
+
+    final timeInBackground =
+        DateTime.now().difference(backgroundedAt);
+
+    _backgroundedAt = null;
+
+    if (timeInBackground >= autoLockAfter) {
+      _lockApp();
+    }
+  }
+
+  void _lockApp() {
+    if (!mounted) return;
+
+    setState(() {
+      _isUnlocked = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,8 +156,11 @@ class AppLockPage extends StatefulWidget {
 }
 
 class _AppLockPageState extends State<AppLockPage> {
-  final TextEditingController _pinController = TextEditingController();
-  final LocalAuthentication _localAuth = LocalAuthentication();
+  final TextEditingController _pinController =
+      TextEditingController();
+
+  final LocalAuthentication _localAuth =
+      LocalAuthentication();
 
   Timer? _lockoutTimer;
 
@@ -68,6 +168,7 @@ class _AppLockPageState extends State<AppLockPage> {
       'cloud_guard_app_lock_recovery_email';
 
   String? _errorMessage;
+
   Duration _remainingLockout = Duration.zero;
 
   bool _biometricAvailable = false;
@@ -86,11 +187,13 @@ class _AppLockPageState extends State<AppLockPage> {
   void dispose() {
     _lockoutTimer?.cancel();
     _pinController.dispose();
+
     super.dispose();
   }
 
   Future<void> _checkBiometricAvailability() async {
-    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+    if (kIsWeb ||
+        defaultTargetPlatform != TargetPlatform.android) {
       if (!mounted) return;
 
       setState(() {
@@ -108,7 +211,9 @@ class _AppLockPageState extends State<AppLockPage> {
       if (!mounted) return;
 
       setState(() {
-        _biometricAvailable = availableBiometrics.isNotEmpty;
+        _biometricAvailable =
+            availableBiometrics.isNotEmpty;
+
         _biometricChecking = false;
       });
     } on LocalAuthException {
@@ -140,6 +245,7 @@ class _AppLockPageState extends State<AppLockPage> {
         _errorMessage =
             'Biometric authentication is not available on this device.';
       });
+
       return;
     }
 
@@ -149,7 +255,8 @@ class _AppLockPageState extends State<AppLockPage> {
     });
 
     try {
-      final authenticated = await _localAuth.authenticate(
+      final authenticated =
+          await _localAuth.authenticate(
         localizedReason:
             'Authenticate to unlock your Cloud Guard App Lock.',
         biometricOnly: true,
@@ -160,6 +267,7 @@ class _AppLockPageState extends State<AppLockPage> {
 
       if (authenticated) {
         widget.onUnlocked();
+
         return;
       }
 
@@ -171,14 +279,19 @@ class _AppLockPageState extends State<AppLockPage> {
       if (!mounted) return;
 
       setState(() {
-        if (error.code == LocalAuthExceptionCode.biometricLockout ||
-            error.code == LocalAuthExceptionCode.temporaryLockout) {
+        if (error.code ==
+                LocalAuthExceptionCode.biometricLockout ||
+            error.code ==
+                LocalAuthExceptionCode.temporaryLockout) {
           _errorMessage =
               'Biometric authentication is temporarily locked. Use your PIN instead.';
-        } else if (error.code == LocalAuthExceptionCode.noBiometricHardware ||
-            error.code == LocalAuthExceptionCode.noBiometricsEnrolled) {
+        } else if (error.code ==
+                LocalAuthExceptionCode.noBiometricHardware ||
+            error.code ==
+                LocalAuthExceptionCode.noBiometricsEnrolled) {
           _errorMessage =
               'No enrolled biometric is available. Use your PIN instead.';
+
           _biometricAvailable = false;
         } else {
           _errorMessage =
@@ -227,7 +340,8 @@ class _AppLockPageState extends State<AppLockPage> {
   void _updateRemainingLockout() {
     if (!mounted) return;
 
-    final remaining = appLockController.remainingLockout;
+    final remaining =
+        appLockController.remainingLockout;
 
     setState(() {
       _remainingLockout = remaining;
@@ -239,7 +353,9 @@ class _AppLockPageState extends State<AppLockPage> {
   }
 
   Future<void> _unlock() async {
-    if (_remainingLockout > Duration.zero) return;
+    if (_remainingLockout > Duration.zero) {
+      return;
+    }
 
     await appLockController.reload();
 
@@ -247,7 +363,8 @@ class _AppLockPageState extends State<AppLockPage> {
       return;
     }
 
-    final result = appLockController.verifyPin(
+    final result =
+        appLockController.verifyPin(
       _pinController.text,
     );
 
@@ -255,6 +372,7 @@ class _AppLockPageState extends State<AppLockPage> {
 
     if (result.isValid) {
       widget.onUnlocked();
+
       return;
     }
 
@@ -286,17 +404,21 @@ class _AppLockPageState extends State<AppLockPage> {
   }
 
   Future<void> _sendRecoveryLink() async {
-    final email = FirebaseAuth.instance.currentUser?.email;
+    final email =
+        FirebaseAuth.instance.currentUser?.email;
 
     if (email == null || email.isEmpty) {
       setState(() {
-        _errorMessage = 'No Firebase account email is available.';
+        _errorMessage =
+            'No Firebase account email is available.';
       });
+
       return;
     }
 
     try {
-      final preferences = await SharedPreferences.getInstance();
+      final preferences =
+          await SharedPreferences.getInstance();
 
       await preferences.setString(
         _recoveryEmailKey,
@@ -306,20 +428,24 @@ class _AppLockPageState extends State<AppLockPage> {
       final recoveryUrl = kIsWeb
           ? Uri.base
               .replace(
-                queryParameters: const <String, String>{},
+                queryParameters:
+                    const <String, String>{},
                 fragment: '',
               )
               .toString()
           : 'https://arunvishwakarma1307-wq.github.io/Cloud-Guard/';
 
-      final actionCodeSettings = ActionCodeSettings(
+      final actionCodeSettings =
+          ActionCodeSettings(
         url: recoveryUrl,
         handleCodeInApp: true,
       );
 
-      await FirebaseAuth.instance.sendSignInLinkToEmail(
+      await FirebaseAuth.instance
+          .sendSignInLinkToEmail(
         email: email,
-        actionCodeSettings: actionCodeSettings,
+        actionCodeSettings:
+            actionCodeSettings,
       );
 
       if (!mounted) return;
@@ -334,7 +460,8 @@ class _AppLockPageState extends State<AppLockPage> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () =>
+                  Navigator.of(context).pop(),
               child: const Text('Close'),
             ),
           ],
@@ -360,8 +487,11 @@ class _AppLockPageState extends State<AppLockPage> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final isLockedOut = _remainingLockout > Duration.zero;
+    final colors =
+        Theme.of(context).colorScheme;
+
+    final isLockedOut =
+        _remainingLockout > Duration.zero;
 
     return Scaffold(
       body: SafeArea(
@@ -369,14 +499,17 @@ class _AppLockPageState extends State<AppLockPage> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(
+              constraints:
+                  const BoxConstraints(
                 maxWidth: 420,
               ),
               child: Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding:
+                      const EdgeInsets.all(24),
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisSize:
+                        MainAxisSize.min,
                     children: [
                       Icon(
                         Icons.lock,
@@ -388,10 +521,12 @@ class _AppLockPageState extends State<AppLockPage> {
 
                       const Text(
                         'Cloud Guard is locked',
-                        textAlign: TextAlign.center,
+                        textAlign:
+                            TextAlign.center,
                         style: TextStyle(
                           fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                          fontWeight:
+                              FontWeight.bold,
                         ),
                       ),
 
@@ -399,7 +534,8 @@ class _AppLockPageState extends State<AppLockPage> {
 
                       const Text(
                         'Use your fingerprint or App Lock PIN to continue.',
-                        textAlign: TextAlign.center,
+                        textAlign:
+                            TextAlign.center,
                       ),
 
                       const SizedBox(height: 24),
@@ -407,23 +543,30 @@ class _AppLockPageState extends State<AppLockPage> {
                       if (_biometricAvailable &&
                           !isLockedOut) ...[
                         SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: _biometricAuthenticating
-                                ? null
-                                : _unlockWithBiometric,
-                            icon: _biometricAuthenticating
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Icon(
-                                    Icons.fingerprint,
-                                    size: 28,
-                                  ),
+                          width:
+                              double.infinity,
+                          child:
+                              OutlinedButton.icon(
+                            onPressed:
+                                _biometricAuthenticating
+                                    ? null
+                                    : _unlockWithBiometric,
+                            icon:
+                                _biometricAuthenticating
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child:
+                                            CircularProgressIndicator(
+                                          strokeWidth:
+                                              2,
+                                        ),
+                                      )
+                                    : const Icon(
+                                        Icons
+                                            .fingerprint,
+                                        size: 28,
+                                      ),
                             label: Text(
                               _biometricAuthenticating
                                   ? 'Waiting for authentication...'
@@ -438,25 +581,32 @@ class _AppLockPageState extends State<AppLockPage> {
                           children: [
                             Expanded(
                               child: Divider(
-                                color: colors.outline,
+                                color:
+                                    colors.outline,
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(
+                              padding:
+                                  const EdgeInsets
+                                      .symmetric(
                                 horizontal: 12,
                               ),
                               child: Text(
                                 'OR USE PIN',
-                                style: TextStyle(
-                                  color: colors.onSurfaceVariant,
+                                style:
+                                    TextStyle(
+                                  color: colors
+                                      .onSurfaceVariant,
                                   fontSize: 11,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight:
+                                      FontWeight.w600,
                                 ),
                               ),
                             ),
                             Expanded(
                               child: Divider(
-                                color: colors.outline,
+                                color:
+                                    colors.outline,
                               ),
                             ),
                           ],
@@ -466,31 +616,47 @@ class _AppLockPageState extends State<AppLockPage> {
                       ],
 
                       TextField(
-                        controller: _pinController,
-                        enabled: !isLockedOut,
-                        autofocus: !_biometricAvailable,
+                        controller:
+                            _pinController,
+                        enabled:
+                            !isLockedOut,
+                        autofocus:
+                            !_biometricAvailable,
                         obscureText: true,
-                        keyboardType: TextInputType.number,
+                        keyboardType:
+                            TextInputType.number,
                         maxLength: 6,
-                        textAlign: TextAlign.center,
+                        textAlign:
+                            TextAlign.center,
                         style: TextStyle(
-                          color: colors.onSurface,
+                          color:
+                              colors.onSurface,
                           letterSpacing: 8,
                           fontSize: 22,
                         ),
-                        decoration: InputDecoration(
-                          labelText: 'App Lock PIN',
+                        decoration:
+                            InputDecoration(
+                          labelText:
+                              'App Lock PIN',
                           counterText: '',
-                          prefixIcon: const Icon(
+                          prefixIcon:
+                              const Icon(
                             Icons.password,
                           ),
                           filled: true,
-                          fillColor: colors.surface,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15),
+                          fillColor:
+                              colors.surface,
+                          border:
+                              OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius
+                                    .circular(
+                              15,
+                            ),
                           ),
                         ),
-                        onSubmitted: (_) => _unlock(),
+                        onSubmitted:
+                            (_) => _unlock(),
                       ),
 
                       const SizedBox(height: 16),
@@ -500,37 +666,50 @@ class _AppLockPageState extends State<AppLockPage> {
                           'Try again in '
                           '${_formatRemaining(_remainingLockout)}',
                           style: TextStyle(
-                            color: colors.error,
+                            color:
+                                colors.error,
                           ),
-                          textAlign: TextAlign.center,
+                          textAlign:
+                              TextAlign.center,
                         )
-                      else if (_errorMessage != null)
+                      else if (_errorMessage !=
+                          null)
                         Text(
                           _errorMessage!,
                           style: TextStyle(
-                            color: colors.error,
+                            color:
+                                colors.error,
                           ),
-                          textAlign: TextAlign.center,
+                          textAlign:
+                              TextAlign.center,
                         ),
 
                       const SizedBox(height: 16),
 
                       SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.icon(
-                          onPressed: isLockedOut ? null : _unlock,
+                        width:
+                            double.infinity,
+                        child:
+                            FilledButton.icon(
+                          onPressed:
+                              isLockedOut
+                                  ? null
+                                  : _unlock,
                           icon: const Icon(
                             Icons.lock_open,
                           ),
-                          label: const Text(
+                          label:
+                              const Text(
                             'Unlock with PIN',
                           ),
                         ),
                       ),
 
                       TextButton(
-                        onPressed: _sendRecoveryLink,
-                        child: const Text(
+                        onPressed:
+                            _sendRecoveryLink,
+                        child:
+                            const Text(
                           'Forgot PIN?',
                         ),
                       ),
@@ -540,7 +719,8 @@ class _AppLockPageState extends State<AppLockPage> {
                         Text(
                           'Checking biometric availability...',
                           style: TextStyle(
-                            color: colors.onSurfaceVariant,
+                            color: colors
+                                .onSurfaceVariant,
                             fontSize: 11,
                           ),
                         ),
