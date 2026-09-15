@@ -10,7 +10,7 @@
 [![Cursor](https://img.shields.io/badge/AI%20Assisted-Cursor-000000?logo=cursor&logoColor=white)](https://cursor.com/)
 [![Codex](https://img.shields.io/badge/AI%20Assisted-Codex-412991?logo=openai&logoColor=white)](https://openai.com/codex/)
 
-A Flutter-based cloud security and file-management MVP focused on honest account-security information, local PDF validation, a temporary local file workspace, App Lock PIN and biometric protection, theme settings, and functional browser notifications.
+A Flutter-based cloud security and file-management MVP focused on honest account-security information, local PDF validation, a temporary local file workspace, App Lock PIN and biometric protection, auto-lock controls, theme settings, functional browser notifications, and a custom Android update notification system.
 
 ## 🔗 Try Cloud Guard
 
@@ -18,11 +18,11 @@ A Flutter-based cloud security and file-management MVP focused on honest account
 
 https://arunvishwakarma1307-wq.github.io/Cloud-Guard/
 
-### 📱 Android APK
+### **📱 Android APK**
 
-https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/download/v1.0.6/app-release.apk
+https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/download/v1.0.8/app-release.apk
 
-[View Android Release v1.0.6](https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/tag/v1.0.6)
+[View Android Release v1.0.8](https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/tag/v1.0.8)
 
 > Android users: Download the APK, open it from the Downloads folder, allow installation from this source if Android asks for permission, install it, and then open Cloud Guard. Windows users should use the Web Demo because Windows cannot open Android APK files directly.
 
@@ -45,6 +45,8 @@ Cloud Guard is currently in **MVP development**.
 | Android release APK | Built, installed, and tested on an Android device |
 | Firebase Storage cloud uploads | Unavailable; Storage is not enabled or configured |
 | Google Sign-In | Available and tested |
+| App Lock Auto-Lock | Available with configurable lock duration |
+| Android release APK | Built; latest release device testing pending |
 
 > **Storage honesty:** Cloud Guard does not simulate cloud uploads, upload progress, cloud quota, stored cloud files, or successful cloud-upload messages. Firebase Storage is not currently enabled or configured for live uploads.
 
@@ -67,6 +69,9 @@ Cloud Guard is currently in **MVP development**.
 | 🔐 | Readable authentication forms | Theme-aware email, password, and confirm-password fields with clear text, icons, labels, backgrounds, and borders in Light, Dark, and System modes. |
 | 🛡️ | Security Settings | Account-security controls with theme-aware headings and readable Light and Dark theme presentation. |
 | 🔐 | Google Sign-In | Google account authentication through Firebase Authentication, available and tested on Android and Web. |
+| ⏱️ | Auto-Lock | Automatically locks the application after a configurable period in the background, including Immediately, 1 minute, 5 minutes, 15 minutes, 30 minutes, or Never. |
+| 🔄 | Update Checker | Android update checking through a trusted GitHub release manifest with version comparison and trusted release URL validation. |
+| 🤖 | Update Popup | Custom Android update notification popup with Cloud Guard branding, robot artwork, version information, release notes, and an official GitHub download action. |
 
 ## 🖥️ Current Screens
 
@@ -78,9 +83,9 @@ Cloud Guard is currently in **MVP development**.
 | ⬆️ Upload Files | Select, validate, and add PDFs to the local workspace. |
 | ☁️ Storage | View local workspace entries and the honest cloud-unavailable state. |
 | 🛡️ Security | Review Firebase-derived account-security checks. |
-| ⚙️ Settings | Access account, application, theme, App Lock, and notification settings. |
 | 👤 Security Settings | Manage password-reset and email-verification actions. |
 | 🔒 App Lock | Unlock the application using Android biometrics when available or the App Lock PIN. |
+| ⚙️ | Settings | Access account, application, theme, App Lock, Auto-Lock, and notification settings. |
 
 ## 📄 PDF and Local Workspace Flow
 
@@ -179,6 +184,16 @@ Cloud Guard includes an additional local App Lock layer.
 
 The biometric feature uses Flutter's `local_auth` package and Android biometric permissions. The Android application uses `FlutterFragmentActivity` to support the biometric authentication flow.
 
+* Auto-Lock can automatically lock the application after it has been in the background for the selected duration.
+
+* Available durations are Immediately, 1 minute, 5 minutes, 15 minutes, 30 minutes, and Never.
+
+* The selected Auto-Lock duration is stored persistently.
+
+* When the application returns from the background after the configured duration, the App Lock screen is shown again.
+
+* Auto-Lock works together with the existing PIN and biometric unlock system.
+
 ## 🔔 Browser Notifications
 
 Cloud Guard includes functional browser notification support.
@@ -242,6 +257,12 @@ Security Settings headings and page backgrounds are also theme-aware so that tex
 * Git and GitHub
 
 * Cursor and OpenAI Codex for AI-assisted development
+
+* `http`
+
+* `package_info_plus`
+
+* `url_launcher`
 
 ## 🚀 Platform Support
 
@@ -341,6 +362,8 @@ build/app/outputs/flutter-apk/app-release.apk
 | Local workspace tests | `flutter test test/local_file_workspace_test.dart` |
 | Browser notification manual test | Enable Notifications in Settings, allow browser permission, send a Test notification, disable/re-enable, and verify persistence |
 | App Lock manual test | Enable App Lock, verify PIN unlock and lockout behavior, and test biometric unlock on a supported Android device |
+| Auto-Lock manual test | Enable Auto-Lock, select a duration, background the application, return after the selected duration, and verify that App Lock is shown |
+| Update popup manual test | Install an older Android release, publish a newer trusted release manifest, open the app, and verify the update popup and GitHub release action |
 
 The current project test suite passes, and Flutter static analysis reports no issues.
 
@@ -422,13 +445,17 @@ For each feature, inspect the relevant files first, make a small scoped change, 
 
 * **Task 25:** Improved Settings and Security Settings theme compatibility, fixed the Settings page bottom overflow issue, and improved Security Settings heading/background readability in Dark Theme.
 
+* **Task 26:** Added configurable App Lock Auto-Lock durations and automatic re-locking after the application remains in the background for the selected duration.
+
+* **Task 27:** Improved the Android update notification popup with Cloud Guard branding, custom robot artwork, version and release-note presentation, trusted GitHub release download handling, and a polished update interface.
+
 ## 🤝 Contributing
 
 Cloud Guard is an MVP under active development. Keep changes focused, preserve existing authentication and UI behavior unless a task specifically requires otherwise, test changes locally, and document new functionality in this README.
 
 ## 📝 Development Notes
 
-Cloud Guard has been developed with assistance from ChatGPT, OpenAI Codex, and Cursor for code analysis, authentication routing, responsive-layout improvements, PDF validation, security-status modeling, local workspace development, unit-test planning, deployment configuration, notification functionality, biometric authentication, theme compatibility, and documentation. All generated changes were reviewed, tested, committed, and pushed by the project owner.
+Cloud Guard has been developed with assistance from ChatGPT, OpenAI Codex, and Cursor for code analysis, authentication routing, responsive-layout improvements, PDF validation, security-status modeling, local workspace development, unit-test planning, deployment configuration, notification functionality, biometric authentication, theme compatibility, and documentation. All generated changes were reviewed, tested, committed, and pushed by the project owner.update-system development, App Lock Auto-Lock functionality
 
 ## 📄 License
 
