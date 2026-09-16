@@ -1,6 +1,6 @@
 ﻿{
-  "version": "1.0.8",
+  "version": "1.0.9",
   "buildNumber": "9",
-  "downloadUrl": "https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/download/v1.0.8/app-release.apk",
-  "releaseNotes": "Added configurable App Lock Auto-Lock, improved the Android update popup, and added Cloud Guard robot artwork."
+  "downloadUrl": "https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/download/v1.0.9/app-release.apk",
+  "releaseNotes": "Added Basic File Security Scanner with extension, file signature, file size, filename safety, and duplicate checks. Added File Type Mismatch Detection for PDF, PNG, JPG, and JPEG files."
 }
