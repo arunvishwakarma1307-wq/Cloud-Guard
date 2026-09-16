@@ -35,6 +35,8 @@ Cloud Guard is currently in **MVP development**.
 | Firebase Authentication | Available and tested |
 | Account-security summary | Available and tested |
 | Local PDF selection and validation | Available and tested |
+| Basic File Security Scanner | Available and tested |
+| File Type Mismatch Detection | Available and tested |
 | Local PDF workspace | Available and tested |
 | App Lock PIN | Available and tested |
 | Android biometric authentication | Implemented; Android device testing pending |
@@ -48,6 +50,7 @@ Cloud Guard is currently in **MVP development**.
 | App Lock Auto-Lock | Available with configurable lock duration |
 | Android release APK | Built; latest release device testing pending |
 
+
 > **Storage honesty:** Cloud Guard does not simulate cloud uploads, upload progress, cloud quota, stored cloud files, or successful cloud-upload messages. Firebase Storage is not currently enabled or configured for live uploads.
 
 ## ✨ What Cloud Guard Includes
@@ -60,6 +63,8 @@ Cloud Guard is currently in **MVP development**.
 | 🔔 | Notifications | Functional browser notifications with persistent enable/disable settings, browser notification permission handling, and a test notification feature. |
 | ✅ | Account security | A transparent account-setup summary based only on Firebase account facts. It is not a risk or threat score. |
 | 📄 | PDF validation | Case-insensitive `.pdf` validation, `%PDF-` signature checking, and a 10 MB size limit. |
+| 🛡️ | Basic File Security Scanner | Performs basic local checks for file extension, file signature, file size, filename safety, and duplicate detection before a file is added to the local workspace. |
+| 🔍 | File Type Mismatch Detection | Checks the actual file signature and detects when the file content does not match its current extension, including PDF, PNG, JPG, and JPEG detection. |
 | 🗂️ | Local workspace | Add multiple validated PDFs to a temporary in-memory workspace without Firebase billing. |
 | 🔎 | Search and sort | Search local filenames and sort by name or file size. |
 | 🧹 | Safe cleanup | Remove individual entries or use confirmation-protected Clear All. |
@@ -94,15 +99,23 @@ Choose PDF
 
     ↓
 
+Detect actual file type from file signature
+
+    ↓
+
+Check extension and actual file type match
+
+    ↓
+
+Run Basic Security Scan
+
+    ↓
+
 Validate extension, size, and PDF signature
 
     ↓
 
 Add valid PDF to the shared local workspace
-
-    ↓
-
-Search, sort, inspect size, or remove local entries
 ```
 
 ### Local Workspace Features
@@ -359,7 +372,9 @@ build/app/outputs/flutter-apk/app-release.apk
 | Diff whitespace check | `git diff --check` |
 | Account-security tests | `flutter test test/security_status_test.dart` |
 | PDF validation tests | `flutter test test/pdf_file_validation_test.dart` |
+| File security scanner test | `flutter test test/file_security_scanner_test.dart` |
 | Local workspace tests | `flutter test test/local_file_workspace_test.dart` |
+| File type mismatch manual test | Rename a valid PDF copy to `.png`, `.jpg`, or `.jpeg`, select it, and verify that Cloud Guard detects the actual PDF file type and blocks the mismatched file |
 | Browser notification manual test | Enable Notifications in Settings, allow browser permission, send a Test notification, disable/re-enable, and verify persistence |
 | App Lock manual test | Enable App Lock, verify PIN unlock and lockout behavior, and test biometric unlock on a supported Android device |
 | Auto-Lock manual test | Enable Auto-Lock, select a duration, background the application, return after the selected duration, and verify that App Lock is shown |
@@ -449,13 +464,17 @@ For each feature, inspect the relevant files first, make a small scoped change, 
 
 * **Task 27:** Improved the Android update notification popup with Cloud Guard branding, custom robot artwork, version and release-note presentation, trusted GitHub release download handling, and a polished update interface.
 
+* **Task 28:** Added a Basic File Security Scanner with local checks for file extension, file signature, file size, filename safety, and duplicate detection before adding files to the local workspace.
+
+* **Task 29:** Added File Type Mismatch Detection using actual file signatures to detect PDF, PNG, JPG, and JPEG content and identify when the current filename extension does not match the detected file type.
+
 ## 🤝 Contributing
 
 Cloud Guard is an MVP under active development. Keep changes focused, preserve existing authentication and UI behavior unless a task specifically requires otherwise, test changes locally, and document new functionality in this README.
 
 ## 📝 Development Notes
 
-Cloud Guard has been developed with assistance from ChatGPT, OpenAI Codex, and Cursor for code analysis, authentication routing, responsive-layout improvements, PDF validation, security-status modeling, local workspace development, unit-test planning, deployment configuration, notification functionality, biometric authentication, theme compatibility, and documentation. All generated changes were reviewed, tested, committed, and pushed by the project owner.update-system development, App Lock Auto-Lock functionality
+Cloud Guard has been developed with assistance from ChatGPT, OpenAI Codex, and Cursor for code analysis, authentication routing, responsive-layout improvements, PDF validation, security-status modeling, local workspace development, unit-test planning, deployment configuration, notification functionality, biometric authentication, theme compatibility, and documentation.Basic File Security Scanner, File Type Mismatch Detection, and related testing. All generated changes were reviewed, tested, committed, and pushed by the project owner.update-system development, App Lock Auto-Lock functionality
 
 ## 📄 License
 
