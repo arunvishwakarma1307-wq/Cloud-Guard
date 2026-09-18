@@ -10,7 +10,7 @@
 [![Cursor](https://img.shields.io/badge/AI%20Assisted-Cursor-000000?logo=cursor&logoColor=white)](https://cursor.com/)
 [![Codex](https://img.shields.io/badge/AI%20Assisted-Codex-412991?logo=openai&logoColor=white)](https://openai.com/codex/)
 
-A Flutter-based cloud security and file-management MVP focused on honest account-security information, local PDF validation, a temporary local file workspace, App Lock PIN and biometric protection, auto-lock controls, theme settings, functional browser notifications, and a custom Android update notification system.
+A Flutter-based cloud security and file-management MVP focused on honest account-security information, local PDF validation, a temporary local file workspace, file security scanning, file type mismatch detection, file integrity checking, App Lock PIN and biometric protection, auto-lock controls, theme settings, functional browser notifications, and a custom Android update notification system.
 
 ## 🔗 Try Cloud Guard
 
@@ -49,6 +49,7 @@ Cloud Guard is currently in **MVP development**.
 | Google Sign-In | Available and tested |
 | App Lock Auto-Lock | Available with configurable lock duration |
 | Android release APK | Built; latest release device testing pending |
+| File Integrity Checker | Available and tested |
 
 
 > **Storage honesty:** Cloud Guard does not simulate cloud uploads, upload progress, cloud quota, stored cloud files, or successful cloud-upload messages. Firebase Storage is not currently enabled or configured for live uploads.
@@ -65,6 +66,7 @@ Cloud Guard is currently in **MVP development**.
 | 📄 | PDF validation | Case-insensitive `.pdf` validation, `%PDF-` signature checking, and a 10 MB size limit. |
 | 🛡️ | Basic File Security Scanner | Performs basic local checks for file extension, file signature, file size, filename safety, and duplicate detection before a file is added to the local workspace. |
 | 🔍 | File Type Mismatch Detection | Checks the actual file signature and detects when the file content does not match its current extension, including PDF, PNG, JPG, and JPEG detection. |
+| 🔐 | File Integrity Checker | Calculates real SHA-256 hashes for supported files and images and compares the current file against a locally saved trusted original baseline. |
 | 🗂️ | Local workspace | Add multiple validated PDFs to a temporary in-memory workspace without Firebase billing. |
 | 🔎 | Search and sort | Search local filenames and sort by name or file size. |
 | 🧹 | Safe cleanup | Remove individual entries or use confirmation-protected Clear All. |
@@ -91,6 +93,7 @@ Cloud Guard is currently in **MVP development**.
 | 👤 Security Settings | Manage password-reset and email-verification actions. |
 | 🔒 App Lock | Unlock the application using Android biometrics when available or the App Lock PIN. |
 | ⚙️ | Settings | Access account, application, theme, App Lock, Auto-Lock, and notification settings. |
+| 🔐 File Integrity | Calculate SHA-256 hashes, save a trusted original baseline, and compare the current file against that baseline. |
 
 ## 📄 PDF and Local Workspace Flow
 
@@ -255,6 +258,8 @@ Security Settings headings and page backgrounds are also theme-aware so that tex
 
 * `file_picker`
 
+* `crypto` for SHA-256 hashing
+
 * `flutter_local_notifications`
 
 * `shared_preferences`
@@ -374,11 +379,15 @@ build/app/outputs/flutter-apk/app-release.apk
 | PDF validation tests | `flutter test test/pdf_file_validation_test.dart` |
 | File security scanner test | `flutter test test/file_security_scanner_test.dart` |
 | Local workspace tests | `flutter test test/local_file_workspace_test.dart` |
+| File integrity service tests | `flutter test test/file_integrity_service_test.dart` |
+| File integrity storage tests | `flutter test test/file_integrity_storage_test.dart` |
+| File integrity manual test | Save a trusted original SHA-256 baseline for a supported file or image, then select the file again and compare the current hash with the saved baseline |
 | File type mismatch manual test | Rename a valid PDF copy to `.png`, `.jpg`, or `.jpeg`, select it, and verify that Cloud Guard detects the actual PDF file type and blocks the mismatched file |
 | Browser notification manual test | Enable Notifications in Settings, allow browser permission, send a Test notification, disable/re-enable, and verify persistence |
 | App Lock manual test | Enable App Lock, verify PIN unlock and lockout behavior, and test biometric unlock on a supported Android device |
 | Auto-Lock manual test | Enable Auto-Lock, select a duration, background the application, return after the selected duration, and verify that App Lock is shown |
 | Update popup manual test | Install an older Android release, publish a newer trusted release manifest, open the app, and verify the update popup and GitHub release action |
+
 
 The current project test suite passes, and Flutter static analysis reports no issues.
 
@@ -468,13 +477,15 @@ For each feature, inspect the relevant files first, make a small scoped change, 
 
 * **Task 29:** Added File Type Mismatch Detection using actual file signatures to detect PDF, PNG, JPG, and JPEG content and identify when the current filename extension does not match the detected file type.
 
+* **Task 30:** Added a local File Integrity Checker using SHA-256 hashing, trusted original baselines, local baseline storage, and automated integrity service and storage tests for supported files and images.
+
 ## 🤝 Contributing
 
 Cloud Guard is an MVP under active development. Keep changes focused, preserve existing authentication and UI behavior unless a task specifically requires otherwise, test changes locally, and document new functionality in this README.
 
 ## 📝 Development Notes
 
-Cloud Guard has been developed with assistance from ChatGPT, OpenAI Codex, and Cursor for code analysis, authentication routing, responsive-layout improvements, PDF validation, security-status modeling, local workspace development, unit-test planning, deployment configuration, notification functionality, biometric authentication, theme compatibility, and documentation.Basic File Security Scanner, File Type Mismatch Detection, and related testing. All generated changes were reviewed, tested, committed, and pushed by the project owner.update-system development, App Lock Auto-Lock functionality
+Cloud Guard has been developed with assistance from ChatGPT, OpenAI Codex, and Cursor for code analysis, authentication routing, responsive-layout improvements, PDF validation, security-status modeling, local workspace development, unit-test planning, deployment configuration, notification functionality, biometric authentication, theme compatibility, File Security Scanner development, File Type Mismatch Detection, File Integrity Checker development, App Lock Auto-Lock functionality, Android update-system development, and documentation. All generated changes were reviewed, tested, committed, and pushed by the project owner.
 
 ## 📄 License
 
