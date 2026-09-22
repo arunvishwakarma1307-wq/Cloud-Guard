@@ -16,6 +16,8 @@ class FileSecurityScanResult {
     required this.originalFileType,
     required this.duplicateExtension,
     required this.detectedFileType,
+    required this.detectedExtension,
+    required this.fileTypeSupported,
   });
 
   final bool extensionPassed;
@@ -26,22 +28,14 @@ class FileSecurityScanResult {
   final bool suspiciousNamePassed;
   final bool dangerousExtensionPassed;
 
-  /// Example:
-  /// PDF (.pdf)
-  /// Word (.docx)
-  /// Not detected
   final String originalFileType;
-
-  /// Final dangerous extension when a double extension exists.
-  /// Example:
-  /// invoice.pdf.exe -> .exe
   final String duplicateExtension;
-
-  /// Example:
-  /// PDF
-  /// Word
-  /// Unknown
   final String detectedFileType;
+  final String detectedExtension;
+
+  /// True when Cloud Guard knows how to identify the file
+  /// from its content/signature.
+  final bool fileTypeSupported;
 
   bool get passed =>
       extensionPassed &&
@@ -52,14 +46,17 @@ class FileSecurityScanResult {
       suspiciousNamePassed &&
       dangerousExtensionPassed;
 
-  String get resultText =>
-      passed ? 'Basic Security Scan Passed' : 'Basic Security Scan Failed';
+  String get resultText {
+    return passed
+        ? 'Basic Security Scan Passed'
+        : 'Basic Security Scan Failed';
+  }
 }
 
 class FileSecurityScanner {
   const FileSecurityScanner();
 
-  static const Set<String> _dangerousExtensions = {
+  static const Set<String> dangerousExtensions = {
     '.exe',
     '.bat',
     '.cmd',
@@ -68,183 +65,168 @@ class FileSecurityScanner {
     '.com',
   };
 
+  static const Set<String> supportedExtensions = {
+    '.pdf',
+    '.png',
+    '.jpg',
+    '.jpeg',
+    '.gif',
+    '.webp',
+    '.zip',
+    '.doc',
+    '.docx',
+    '.xls',
+    '.xlsx',
+    '.ppt',
+    '.pptx',
+    '.txt',
+    '.csv',
+  };
+
   FileSecurityScanResult scan({
     required String fileName,
     required int fileSize,
-    required Uint8List? bytes,
+    Uint8List? bytes,
   }) {
-    // Existing PDF workspace rule.
-    final extensionPassed =
-        fileName.toLowerCase().endsWith('.pdf');
+    final currentExtension = _getExtension(fileName);
 
-    final sizePassed =
-        fileSize <= maxPdfFileSizeBytes;
+    final dangerousExtension =
+        _hasDangerousExtension(currentExtension);
 
-    final signaturePassed =
-        bytes != null && hasPdfSignature(bytes);
+    final suspiciousDoubleExtension =
+        _hasSuspiciousDoubleExtension(fileName);
 
-    final fileNamePassed =
-        _isSafeFileName(fileName);
+    final safeFileName = _isSafeFileName(fileName);
 
-    final duplicatePassed = !_isDuplicate(
+    final duplicate = _isDuplicate(
       fileName: fileName,
       fileSize: fileSize,
     );
 
-    final suspiciousNamePassed =
-        !_hasSuspiciousDoubleExtension(fileName);
+    final detectedType =
+        bytes == null ? null : const FileTypeDetector().detect(bytes);
 
-    final dangerousExtensionPassed =
-        !_hasDangerousExtension(fileName);
+    final detectedExtension =
+        detectedType?.extension ?? '';
 
-    final detected =
-        _detectFileType(bytes);
+    final detectedTypeName =
+        detectedType?.name ?? 'Not detected';
+
+    final supported =
+        detectedType != null ||
+        supportedExtensions.contains(currentExtension);
+
+    final extensionPassed =
+        !dangerousExtension &&
+        supportedExtensions.contains(currentExtension);
+
+    final signaturePassed = _signatureCheck(
+      fileName: fileName,
+      bytes: bytes,
+      detectedType: detectedType,
+    );
+
+    final sizePassed = _sizeCheck(
+      fileName: fileName,
+      fileSize: fileSize,
+    );
 
     final originalFileType =
-        _buildOriginalFileType(detected);
-
-    final duplicateExtension =
-        _getDuplicateExtension(fileName);
-
-    final detectedFileType =
-        detected?.name ?? 'Unknown';
+        detectedType?.name ?? 'Not detected';
 
     return FileSecurityScanResult(
       extensionPassed: extensionPassed,
       signaturePassed: signaturePassed,
       sizePassed: sizePassed,
-      fileNamePassed: fileNamePassed,
-      duplicatePassed: duplicatePassed,
-      suspiciousNamePassed: suspiciousNamePassed,
-      dangerousExtensionPassed: dangerousExtensionPassed,
+      fileNamePassed: safeFileName,
+      duplicatePassed: !duplicate,
+      suspiciousNamePassed: !suspiciousDoubleExtension,
+      dangerousExtensionPassed: !dangerousExtension,
       originalFileType: originalFileType,
-      duplicateExtension: duplicateExtension,
-      detectedFileType: detectedFileType,
+      duplicateExtension:
+          _getSuspiciousExtension(fileName),
+      detectedFileType: detectedTypeName,
+      detectedExtension: detectedExtension,
+      fileTypeSupported: supported,
     );
   }
 
-  DetectedFileType? _detectFileType(
-    Uint8List? bytes,
-  ) {
-    if (bytes == null) {
-      return null;
+  String _getExtension(String fileName) {
+    final lastDot = fileName.lastIndexOf('.');
+
+    if (lastDot == -1 ||
+        lastDot == fileName.length - 1) {
+      return '';
     }
 
-    const detector = FileTypeDetector();
-
-    return detector.detect(bytes);
-  }
-
-  String _buildOriginalFileType(
-    DetectedFileType? detected,
-  ) {
-    if (detected == null) {
-      return 'Not detected';
-    }
-
-    return '${detected.name} (${detected.extensionLabel})';
-  }
-
-  String _getDuplicateExtension(
-    String fileName,
-  ) {
-    if (!_hasSuspiciousDoubleExtension(fileName)) {
-      return 'None';
-    }
-
-    final name = fileName.trim();
-
-    final lastDotIndex = name.lastIndexOf('.');
-
-    if (lastDotIndex <= 0 ||
-        lastDotIndex == name.length - 1) {
-      return 'None';
-    }
-
-    return name
-        .substring(lastDotIndex)
+    return fileName
+        .substring(lastDot)
         .toLowerCase();
   }
 
-  bool _isSafeFileName(
-    String fileName,
-  ) {
-    final name = fileName.trim();
+  bool _hasDangerousExtension(String extension) {
+    return dangerousExtensions.contains(extension);
+  }
 
-    if (name.isEmpty) return false;
+  bool _hasSuspiciousDoubleExtension(String fileName) {
+    final lowerName = fileName.toLowerCase();
 
-    if (name == '.' || name == '..') {
-      return false;
-    }
+    for (final dangerousExtension
+        in dangerousExtensions) {
+      if (!lowerName.endsWith(dangerousExtension)) {
+        continue;
+      }
 
-    if (name.length > 255) {
-      return false;
-    }
+      final nameWithoutDangerousExtension =
+          lowerName.substring(
+        0,
+        lowerName.length -
+            dangerousExtension.length,
+      );
 
-    // Block control characters.
-    for (final codeUnit in name.codeUnits) {
-      if (codeUnit < 32) {
-        return false;
+      if (nameWithoutDangerousExtension.contains('.')) {
+        return true;
       }
     }
 
-    // Block path separators.
-    if (name.contains('/') ||
-        name.contains(r'\')) {
-      return false;
-    }
-
-    return true;
+    return false;
   }
 
-  bool _hasSuspiciousDoubleExtension(
-    String fileName,
-  ) {
-    final name =
-        fileName.trim().toLowerCase();
+  String _getSuspiciousExtension(String fileName) {
+    final extension = _getExtension(fileName);
 
-    final hasDangerousFinalExtension =
-        _dangerousExtensions.any(
-      (extension) =>
-          name.endsWith(extension),
-    );
-
-    if (!hasDangerousFinalExtension) {
-      return false;
+    if (_hasDangerousExtension(extension)) {
+      return extension;
     }
 
-    final lastDotIndex =
-        name.lastIndexOf('.');
-
-    if (lastDotIndex <= 0) {
-      return false;
+    if (_hasSuspiciousDoubleExtension(fileName)) {
+      return extension;
     }
 
-    final beforeFinalExtension =
-        name.substring(
-      0,
-      lastDotIndex,
-    );
-
-    // Example:
-    // invoice.pdf.exe
-    //
-    // beforeFinalExtension = invoice.pdf
-    // Therefore another extension exists.
-    return beforeFinalExtension.contains('.');
+    return 'None';
   }
 
-  bool _hasDangerousExtension(
-    String fileName,
-  ) {
-    final name =
-        fileName.trim().toLowerCase();
+  bool _isSafeFileName(String fileName) {
+  final trimmedName = fileName.trim();
 
-    return _dangerousExtensions.any(
-      (extension) =>
-          name.endsWith(extension),
-    );
+  if (trimmedName.isEmpty) {
+    return false;
   }
+
+  if (trimmedName == '.' ||
+      trimmedName == '..') {
+    return false;
+  }
+
+  // Reject path separators and null characters.
+  if (trimmedName.contains('/') ||
+      trimmedName.contains('\\') ||
+      trimmedName.contains('\u0000')) {
+    return false;
+  }
+
+  return true;
+}
 
   bool _isDuplicate({
     required String fileName,
@@ -256,5 +238,47 @@ class FileSecurityScanner {
               fileName.toLowerCase() &&
           entry.sizeBytes == fileSize,
     );
+  }
+
+  bool _signatureCheck({
+    required String fileName,
+    required Uint8List? bytes,
+    required DetectedFileType? detectedType,
+  }) {
+    final extension = _getExtension(fileName);
+
+    // Existing PDF validation remains exactly
+    // signature-based when bytes are available.
+    if (extension == '.pdf') {
+      if (bytes == null) {
+        return false;
+      }
+
+      return hasPdfSignature(bytes);
+    }
+
+    // For other supported formats, the actual
+    // content must be detectable when bytes exist.
+    if (bytes == null) {
+      return false;
+    }
+
+    return detectedType != null;
+  }
+
+  bool _sizeCheck({
+    required String fileName,
+    required int fileSize,
+  }) {
+    final extension = _getExtension(fileName);
+
+    // Preserve the existing 10 MB PDF rule.
+    if (extension == '.pdf') {
+      return fileSize <= maxPdfFileSizeBytes;
+    }
+
+    // Other file types currently do not inherit
+    // the PDF 10 MB restriction.
+    return fileSize >= 0;
   }
 }

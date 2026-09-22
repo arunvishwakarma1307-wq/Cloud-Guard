@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
+import 'file_security_report.dart';
 import 'file_security_scanner.dart';
 import 'file_type_detector.dart';
 import 'local_file_workspace.dart';
@@ -21,6 +22,13 @@ class _UploadPageState extends State<UploadPage> {
   String? selectedFileName;
   int? selectedFileSize;
   PlatformFile? selectedFile;
+
+  Uint8List? selectedFileBytes;
+
+  FileSecurityScanResult? selectedSecurityScan;
+
+  DateTime? selectedScanTime;
+
   bool isSelectingFile = false;
 
   final FileTypeDetector _fileTypeDetector =
@@ -38,16 +46,28 @@ class _UploadPageState extends State<UploadPage> {
       final file = await FilePicker.pickFile(
         type: FileType.custom,
         allowedExtensions: [
+          // Documents
           'pdf',
-          'png',
-          'jpg',
-          'jpeg',
           'doc',
           'docx',
           'xls',
           'xlsx',
           'ppt',
           'pptx',
+          'txt',
+          'csv',
+
+          // Images
+          'png',
+          'jpg',
+          'jpeg',
+          'gif',
+          'webp',
+
+          // Archive
+          'zip',
+
+          // Dangerous / executable
           'exe',
           'bat',
           'cmd',
@@ -57,7 +77,9 @@ class _UploadPageState extends State<UploadPage> {
         ],
       );
 
-      if (!mounted || file == null) return;
+      if (!mounted || file == null) {
+        return;
+      }
 
       final fileSize = await file.length();
 
@@ -66,19 +88,23 @@ class _UploadPageState extends State<UploadPage> {
       try {
         bytes = await file.readAsBytes();
       } catch (_) {
-        // Keep the existing validation behavior when bytes
+        // Keep scan behavior when file bytes
         // are unavailable.
       }
 
       // ---------------------------------------------------------
-      // CASE 2: Suspicious / Dangerous File Detection
-      // This runs before Case 1 and PDF validation.
+      // UNIVERSAL BASIC SECURITY SCAN
       // ---------------------------------------------------------
+
       final securityScan = _securityScanner.scan(
         fileName: file.name,
         fileSize: fileSize,
         bytes: bytes,
       );
+
+      // ---------------------------------------------------------
+      // CASE 2: Suspicious / Dangerous File Detection
+      // ---------------------------------------------------------
 
       final suspiciousFile =
           !securityScan.suspiciousNamePassed ||
@@ -93,7 +119,8 @@ class _UploadPageState extends State<UploadPage> {
         securityActivityLog.record(
           title: 'Suspicious file detected',
           description:
-              '${file.name} was blocked because its filename or extension was suspicious.',
+              '${file.name} was blocked because '
+              'its filename or extension was suspicious.',
         );
 
         return;
@@ -101,16 +128,18 @@ class _UploadPageState extends State<UploadPage> {
 
       // ---------------------------------------------------------
       // CASE 1: File Type Mismatch Detection
-      // Existing behavior kept.
       // ---------------------------------------------------------
+
       if (bytes != null) {
-        final detectedType = _fileTypeDetector.detect(bytes);
+        final detectedType =
+            _fileTypeDetector.detect(bytes);
 
         if (detectedType != null) {
           final currentExtension =
               _getExtension(file.name);
 
-          final extensionMatches = _extensionMatches(
+          final extensionMatches =
+              _extensionMatches(
             currentExtension,
             detectedType.extension,
           );
@@ -125,24 +154,10 @@ class _UploadPageState extends State<UploadPage> {
             securityActivityLog.record(
               title: 'File type mismatch detected',
               description:
-                  '${file.name} has extension $currentExtension but the actual file type was detected as ${detectedType.name}.',
-            );
-
-            return;
-          }
-
-          if (detectedType.extension != '.pdf') {
-            showMessage(
-              'Cloud Guard currently accepts PDF files only. '
-              'Detected file type: ${detectedType.name}',
-            );
-
-            securityActivityLog.record(
-              title: 'Non-PDF file blocked',
-              description:
-                  '${file.name} was detected as ${detectedType.name} '
-                  'and was not added because Cloud Guard currently '
-                  'accepts PDF files only.',
+                  '${file.name} has extension '
+                  '$currentExtension but the actual '
+                  'file type was detected as '
+                  '${detectedType.name}.',
             );
 
             return;
@@ -151,21 +166,33 @@ class _UploadPageState extends State<UploadPage> {
       }
 
       // ---------------------------------------------------------
-      // CASE 3: Existing PDF Validation
-      // Existing behavior kept.
+      // CASE 3: PDF Validation
+      //
+      // Only PDFs go through the existing PDF-specific
+      // validation and PDF workspace.
       // ---------------------------------------------------------
-      final validationMessage = validatePdfFile(
-        fileName: file.name,
-        fileSize: fileSize,
-        bytes: bytes,
-      );
 
-      if (validationMessage != null) {
-        showMessage(validationMessage);
-        return;
+      final currentExtension =
+          _getExtension(file.name);
+
+      if (currentExtension == '.pdf') {
+        final validationMessage =
+            validatePdfFile(
+          fileName: file.name,
+          fileSize: fileSize,
+          bytes: bytes,
+        );
+
+        if (validationMessage != null) {
+          showMessage(validationMessage);
+          return;
+        }
       }
 
-      // Remaining basic security checks.
+      // ---------------------------------------------------------
+      // Remaining universal security checks
+      // ---------------------------------------------------------
+
       if (!securityScan.passed) {
         await _showSecurityScanFailedDialog(
           fileName: file.name,
@@ -175,41 +202,95 @@ class _UploadPageState extends State<UploadPage> {
         securityActivityLog.record(
           title: 'Basic Security Scan failed',
           description:
-              '${file.name} was blocked because one or more local security checks failed.',
+              '${file.name} was blocked because '
+              'one or more local security checks failed.',
         );
 
         return;
       }
 
-      final added = localFileWorkspace.add(
-        LocalPdfEntry(
-          name: file.name,
-          sizeBytes: fileSize,
-          bytes: bytes,
-        ),
-      );
+      // ---------------------------------------------------------
+      // PDF WORKSPACE
+      //
+      // Only validated PDFs are added to the existing
+      // LocalPdfEntry workspace.
+      // ---------------------------------------------------------
 
-      if (!added) {
+      if (currentExtension == '.pdf') {
+        final added = localFileWorkspace.add(
+          LocalPdfEntry(
+            name: file.name,
+            sizeBytes: fileSize,
+            bytes: bytes,
+          ),
+        );
+
+        if (!added) {
+          showMessage(
+            'This PDF is already in the local workspace.',
+          );
+          return;
+        }
+
+        setState(() {
+          selectedFile = file;
+          selectedFileName = file.name;
+          selectedFileSize = fileSize;
+          selectedFileBytes = bytes;
+          selectedSecurityScan = securityScan;
+          selectedScanTime = DateTime.now();
+        });
+
+        securityActivityLog.record(
+          title: 'Local PDF added',
+          description:
+              '${file.name} was added to the temporary local workspace.',
+        );
+
         showMessage(
-          'This PDF is already in the local workspace.',
+          'PDF added to the local workspace.',
         );
+
         return;
       }
+
+      // ---------------------------------------------------------
+      // NON-PDF FILE
+      //
+      // The file passed the universal security scan.
+      // It is NOT added to the PDF workspace because the
+      // existing workspace and reader are PDF-specific.
+      // ---------------------------------------------------------
 
       setState(() {
         selectedFile = file;
         selectedFileName = file.name;
         selectedFileSize = fileSize;
+        selectedFileBytes = bytes;
+        selectedSecurityScan = securityScan;
+        selectedScanTime = DateTime.now();
       });
 
       securityActivityLog.record(
-        title: 'Local PDF added',
+        title: 'Non-PDF file security scan passed',
         description:
-            '${file.name} was added to the temporary local workspace.',
+            '${file.name} passed the basic local security scan. '
+            'The file was not added to the PDF workspace because '
+            'the current workspace is PDF-specific.',
       );
 
+      final detectedType =
+          bytes == null
+              ? null
+              : _fileTypeDetector.detect(bytes);
+
+      final detectedName =
+          detectedType?.name ?? 'Unknown';
+
       showMessage(
-        'PDF added to the local workspace.',
+        '${file.name} passed the basic security scan. '
+        'Detected type: $detectedName. '
+        'It was not added to the PDF workspace.',
       );
     } catch (_) {
       if (mounted) {
@@ -226,8 +307,11 @@ class _UploadPageState extends State<UploadPage> {
     }
   }
 
-  String _getExtension(String fileName) {
-    final lastDot = fileName.lastIndexOf('.');
+  String _getExtension(
+    String fileName,
+  ) {
+    final lastDot =
+        fileName.lastIndexOf('.');
 
     if (lastDot == -1 ||
         lastDot == fileName.length - 1) {
@@ -243,18 +327,139 @@ class _UploadPageState extends State<UploadPage> {
     String currentExtension,
     String detectedExtension,
   ) {
-    if (detectedExtension == '.jpeg') {
-      return currentExtension == '.jpeg' ||
-          currentExtension == '.jpg';
+    if (detectedExtension == '.jpg') {
+      return currentExtension == '.jpg' ||
+          currentExtension == '.jpeg';
     }
 
-    return currentExtension == detectedExtension;
+    if (detectedExtension == '.docx') {
+      return currentExtension == '.docx';
+    }
+
+    if (detectedExtension == '.xlsx') {
+      return currentExtension == '.xlsx';
+    }
+
+    if (detectedExtension == '.pptx') {
+      return currentExtension == '.pptx';
+    }
+
+    if (detectedExtension == '.doc') {
+      return currentExtension == '.doc';
+    }
+
+    if (detectedExtension == '.xls') {
+      return currentExtension == '.xls';
+    }
+
+    if (detectedExtension == '.ppt') {
+      return currentExtension == '.ppt';
+    }
+
+    return currentExtension ==
+        detectedExtension;
+  }
+
+  String _getDetectedTypeName() {
+    if (selectedFileBytes == null) {
+      return 'Not detected';
+    }
+
+    final detectedType =
+        _fileTypeDetector.detect(
+      selectedFileBytes!,
+    );
+
+    return detectedType?.name ??
+        'Not detected';
+  }
+
+  String _getSelectedFileLabel() {
+    final extension =
+        _getExtension(
+      selectedFileName ?? '',
+    );
+
+    if (extension == '.pdf') {
+      return 'PDF validated locally';
+    }
+
+    return 'Basic security scan passed locally';
+  }
+
+  IconData _getFileIcon() {
+    final extension =
+        _getExtension(
+      selectedFileName ?? '',
+    );
+
+    switch (extension) {
+      case '.pdf':
+        return Icons.picture_as_pdf;
+
+      case '.png':
+      case '.jpg':
+      case '.jpeg':
+      case '.gif':
+      case '.webp':
+        return Icons.image;
+
+      case '.doc':
+      case '.docx':
+        return Icons.description;
+
+      case '.xls':
+      case '.xlsx':
+        return Icons.table_chart;
+
+      case '.ppt':
+      case '.pptx':
+        return Icons.slideshow;
+
+      case '.zip':
+        return Icons.folder_zip;
+
+      case '.txt':
+      case '.csv':
+        return Icons.article;
+
+      default:
+        return Icons.insert_drive_file;
+    }
+  }
+
+  void _openSecurityReport() {
+    if (selectedFileName == null ||
+        selectedFileSize == null ||
+        selectedSecurityScan == null ||
+        selectedScanTime == null) {
+      showMessage(
+        'Security report is not available for this file.',
+      );
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            FileSecurityReportPage(
+          fileName: selectedFileName!,
+          fileSize: selectedFileSize!,
+          bytes: selectedFileBytes,
+          securityScan:
+              selectedSecurityScan!,
+          scannedAt: selectedScanTime!,
+        ),
+      ),
+    );
   }
 
   // -------------------------------------------------------------
   // CASE 1 DIALOG
   // -------------------------------------------------------------
-  Future<void> _showFileTypeMismatchDialog({
+
+  Future<void>
+      _showFileTypeMismatchDialog({
     required String fileName,
     required String currentExtension,
     required DetectedFileType detectedType,
@@ -277,43 +482,56 @@ class _UploadPageState extends State<UploadPage> {
               ),
             ],
           ),
-          content: SingleChildScrollView(
+          content:
+              SingleChildScrollView(
             child: Column(
               crossAxisAlignment:
                   CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize:
+                  MainAxisSize.min,
               children: [
                 const Text(
                   'Cloud Guard detected that the file content does not match its filename extension.',
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(
+                  height: 16,
+                ),
                 _InfoRow(
                   label: 'File name',
                   value: fileName,
                 ),
                 _InfoRow(
                   label: 'Current extension',
-                  value: currentExtension.isEmpty
+                  value: currentExtension
+                          .isEmpty
                       ? 'No extension'
                       : currentExtension,
                 ),
                 _InfoRow(
                   label: 'Detected file type',
                   value:
-                      '${detectedType.name} (${detectedType.extensionLabel})',
+                      '${detectedType.name} '
+                      '(${detectedType.extensionLabel})',
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(
+                  height: 14,
+                ),
                 const Text(
                   'Why was it blocked?',
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
+                    fontWeight:
+                        FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 6),
-                const Text(
-                  'The file signature indicates a different file type than the current filename extension. The file was not added to the local workspace.',
+                const SizedBox(
+                  height: 6,
                 ),
-                const SizedBox(height: 14),
+                const Text(
+                  'The file signature indicates a different file type than the current filename extension. The file was not accepted by Cloud Guard.',
+                ),
+                const SizedBox(
+                  height: 14,
+                ),
                 const Text(
                   'Note: This is a basic local file-type check. It is not an antivirus or malware scanner.',
                   style: TextStyle(
@@ -327,8 +545,11 @@ class _UploadPageState extends State<UploadPage> {
           actions: [
             FilledButton(
               onPressed: () =>
-                  Navigator.of(context).pop(),
-              child: const Text('OK'),
+                  Navigator.of(
+                context,
+              ).pop(),
+              child:
+                  const Text('OK'),
             ),
           ],
         );
@@ -339,7 +560,9 @@ class _UploadPageState extends State<UploadPage> {
   // -------------------------------------------------------------
   // CASE 2 DIALOG
   // -------------------------------------------------------------
-  Future<void> _showSecurityScanFailedDialog({
+
+  Future<void>
+      _showSecurityScanFailedDialog({
     required String fileName,
     required FileSecurityScanResult result,
   }) async {
@@ -355,11 +578,13 @@ class _UploadPageState extends State<UploadPage> {
         return AlertDialog(
           title: Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.warning_amber_rounded,
                 color: Colors.orange,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(
+                width: 8,
+              ),
               const Expanded(
                 child: Text(
                   'Suspicious File Detected',
@@ -367,84 +592,94 @@ class _UploadPageState extends State<UploadPage> {
               ),
             ],
           ),
-          content: SingleChildScrollView(
+          content:
+              SingleChildScrollView(
             child: Column(
               crossAxisAlignment:
                   CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize:
+                  MainAxisSize.min,
               children: [
                 const Text(
                   'Cloud Guard detected a suspicious filename or dangerous file extension.',
                 ),
-
-                const SizedBox(height: 18),
-
+                const SizedBox(
+                  height: 18,
+                ),
                 const Text(
                   'File Information',
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
+                    fontWeight:
+                        FontWeight.bold,
                     fontSize: 16,
                   ),
                 ),
-
-                const SizedBox(height: 10),
-
+                const SizedBox(
+                  height: 10,
+                ),
                 _InfoRow(
                   label: 'Filename',
                   value: fileName,
                 ),
-
                 _InfoRow(
                   label: 'Original file type',
-                  value: result.originalFileType,
+                  value:
+                      result.originalFileType,
                 ),
-
                 _InfoRow(
                   label: 'Duplicate extension',
-                  value: result.duplicateExtension,
+                  value:
+                      result.duplicateExtension,
                 ),
-
                 _InfoRow(
                   label: 'Detected file type',
-                  value: result.detectedFileType,
+                  value:
+                      result.detectedFileType,
                 ),
-
-                const SizedBox(height: 20),
-
+                const SizedBox(
+                  height: 20,
+                ),
                 const Text(
                   'Security Warning',
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
+                    fontWeight:
+                        FontWeight.bold,
                     fontSize: 16,
                   ),
                 ),
-
-                const SizedBox(height: 10),
-
+                const SizedBox(
+                  height: 10,
+                ),
                 if (isDoubleExtension) ...[
                   const Row(
                     crossAxisAlignment:
                         CrossAxisAlignment.start,
                     children: [
                       Icon(
-                        Icons.warning_amber_rounded,
+                        Icons
+                            .warning_amber_rounded,
                         size: 20,
-                        color: Colors.orange,
+                        color:
+                            Colors.orange,
                       ),
-                      SizedBox(width: 8),
+                      SizedBox(
+                        width: 8,
+                      ),
                       Expanded(
                         child: Text(
                           'Duplicate extension detected',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
+                          style:
+                              TextStyle(
+                            fontWeight:
+                                FontWeight.bold,
                           ),
                         ),
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 8),
-
+                  const SizedBox(
+                    height: 8,
+                  ),
                   if (result.originalFileType !=
                       'Not detected')
                     Text(
@@ -457,98 +692,108 @@ class _UploadPageState extends State<UploadPage> {
                       'No known original file type was detected from the file content.',
                     ),
                 ],
-
                 if (dangerousExtension) ...[
-                  const SizedBox(height: 16),
+                  const SizedBox(
+                    height: 16,
+                  ),
                   Text(
                     'Dangerous extension detected: '
                     '${result.duplicateExtension == 'None' ? 'Yes' : result.duplicateExtension}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
+                    style:
+                        const TextStyle(
+                      fontWeight:
+                          FontWeight.w600,
                     ),
                   ),
                 ],
-
                 if (!isDoubleExtension &&
                     !dangerousExtension) ...[
                   const Text(
                     'One or more basic local security checks failed.',
                   ),
                 ],
-
-                const SizedBox(height: 20),
-
+                const SizedBox(
+                  height: 20,
+                ),
                 const Text(
                   'Security Checks',
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
+                    fontWeight:
+                        FontWeight.bold,
                     fontSize: 16,
                   ),
                 ),
-
-                const SizedBox(height: 10),
-
-                _ScanCheckRow(
-                  label: 'PDF extension check',
-                  passed: result.extensionPassed,
+                const SizedBox(
+                  height: 10,
                 ),
-
                 _ScanCheckRow(
-                  label: 'PDF signature check',
-                  passed: result.signaturePassed,
+                  label:
+                      'File extension check',
+                  passed:
+                      result.extensionPassed,
                 ),
-
                 _ScanCheckRow(
-                  label: 'File size check',
-                  passed: result.sizePassed,
+                  label:
+                      'File signature check',
+                  passed:
+                      result.signaturePassed,
                 ),
-
                 _ScanCheckRow(
-                  label: 'Safe filename check',
-                  passed: result.fileNamePassed,
+                  label:
+                      'File size check',
+                  passed:
+                      result.sizePassed,
                 ),
-
                 _ScanCheckRow(
-                  label: 'Duplicate workspace check',
-                  passed: result.duplicatePassed,
+                  label:
+                      'Safe filename check',
+                  passed:
+                      result.fileNamePassed,
                 ),
-
                 _ScanCheckRow(
-                  label: 'Double extension check',
+                  label:
+                      'Duplicate workspace check',
+                  passed:
+                      result.duplicatePassed,
+                ),
+                _ScanCheckRow(
+                  label:
+                      'Double extension check',
                   passed:
                       result.suspiciousNamePassed,
                 ),
-
                 _ScanCheckRow(
-                  label: 'Dangerous extension check',
+                  label:
+                      'Dangerous extension check',
                   passed:
                       result.dangerousExtensionPassed,
                 ),
-
                 if (isDoubleExtension) ...[
-                  const SizedBox(height: 18),
-
+                  const SizedBox(
+                    height: 18,
+                  ),
                   const Text(
                     'Examples of suspicious files:',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
+                    style:
+                        TextStyle(
+                      fontWeight:
+                          FontWeight.bold,
                     ),
                   ),
-
-                  const SizedBox(height: 6),
-
+                  const SizedBox(
+                    height: 6,
+                  ),
                   const Text(
                     '• invoice.pdf.exe\n'
                     '• photo.jpg.exe\n'
                     '• document.pdf.bat',
                   ),
                 ],
-
-                const SizedBox(height: 18),
-
+                const SizedBox(
+                  height: 18,
+                ),
                 const Text(
-                  'Cloud Guard performs a basic local security check. '
-                  'It does not scan files for viruses or malware.',
+                  'Cloud Guard performs a basic local security check. It does not scan files for viruses or malware.',
                   style: TextStyle(
                     color: Colors.grey,
                     fontSize: 12,
@@ -560,8 +805,11 @@ class _UploadPageState extends State<UploadPage> {
           actions: [
             FilledButton(
               onPressed: () =>
-                  Navigator.of(context).pop(),
-              child: const Text('OK'),
+                  Navigator.of(
+                context,
+              ).pop(),
+              child:
+                  const Text('OK'),
             ),
           ],
         );
@@ -570,10 +818,18 @@ class _UploadPageState extends State<UploadPage> {
   }
 
   void removeSelection() {
-    final name = selectedFileName;
-    final size = selectedFileSize;
+    final name =
+        selectedFileName;
 
-    if (name != null && size != null) {
+    final size =
+        selectedFileSize;
+
+    final extension =
+        _getExtension(name ?? '');
+
+    if (name != null &&
+        size != null &&
+        extension == '.pdf') {
       localFileWorkspace.remove(
         LocalPdfEntry(
           name: name,
@@ -592,10 +848,15 @@ class _UploadPageState extends State<UploadPage> {
       selectedFile = null;
       selectedFileName = null;
       selectedFileSize = null;
+      selectedFileBytes = null;
+      selectedSecurityScan = null;
+      selectedScanTime = null;
     });
   }
 
-  void removeWorkspaceEntry(LocalPdfEntry entry) {
+  void removeWorkspaceEntry(
+    LocalPdfEntry entry,
+  ) {
     final removed =
         localFileWorkspace.remove(entry);
 
@@ -607,35 +868,48 @@ class _UploadPageState extends State<UploadPage> {
       );
     }
 
-    if (selectedFileName == entry.name &&
-        selectedFileSize == entry.sizeBytes) {
+    if (selectedFileName ==
+            entry.name &&
+        selectedFileSize ==
+            entry.sizeBytes) {
       setState(() {
         selectedFile = null;
         selectedFileName = null;
         selectedFileSize = null;
+        selectedFileBytes = null;
+        selectedSecurityScan = null;
+        selectedScanTime = null;
       });
     }
   }
 
   void showStorageUnavailable() {
     showMessage(
-      'Cloud upload is unavailable because Firebase Storage '
-      'is not configured or enabled.',
+      'Cloud upload is unavailable because Firebase Storage is not configured or enabled.',
     );
   }
 
-  void showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
+  void showMessage(
+    String message,
+  ) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(
       SnackBar(
         content: Text(message),
       ),
     );
   }
 
-  String formatFileSize(int size) {
-    if (size < 1024) return '$size bytes';
+  String formatFileSize(
+    int size,
+  ) {
+    if (size < 1024) {
+      return '$size bytes';
+    }
 
-    if (size < 1024 * 1024) {
+    if (size <
+        1024 * 1024) {
       return '${(size / 1024).toStringAsFixed(2)} KB';
     }
 
@@ -643,98 +917,162 @@ class _UploadPageState extends State<UploadPage> {
   }
 
   String getFileSize() {
-    if (selectedFileSize == null) return '';
+    if (selectedFileSize ==
+        null) {
+      return '';
+    }
 
-    return formatFileSize(selectedFileSize!);
+    return formatFileSize(
+      selectedFileSize!,
+    );
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
+    final selectedExtension =
+        _getExtension(
+      selectedFileName ?? '',
+    );
+
+    final isSelectedPdf =
+        selectedExtension == '.pdf';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
           'Cloud Upload',
           style: TextStyle(
-            fontWeight: FontWeight.bold,
+            fontWeight:
+                FontWeight.bold,
           ),
         ),
       ),
       body: SafeArea(
         top: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+        child:
+            SingleChildScrollView(
+          padding:
+              const EdgeInsets.all(
+            20,
+          ),
           child: Column(
             crossAxisAlignment:
                 CrossAxisAlignment.start,
             children: [
               const Text(
-                'Upload Files',
+                'File Security Scanner',
                 style: TextStyle(
                   fontSize: 28,
-                  fontWeight: FontWeight.bold,
+                  fontWeight:
+                      FontWeight.bold,
                 ),
               ),
-
-              const SizedBox(height: 10),
-
+              const SizedBox(
+                height: 10,
+              ),
               const Text(
-                'Select PDF files to keep in your local Cloud Guard workspace',
+                'Select a file to run Cloud Guard\'s basic local security checks',
                 style: TextStyle(
-                  color: Colors.grey,
+                  color:
+                      Colors.grey,
                   fontSize: 16,
                 ),
               ),
+              const SizedBox(
+                height: 30,
+              ),
 
-              const SizedBox(height: 30),
+              // -------------------------------------------------
+              // FILE PICKER
+              // -------------------------------------------------
 
               Card(
                 elevation: 5,
                 child: SizedBox(
-                  width: double.infinity,
-                  height: 220,
+                  width:
+                      double.infinity,
+                  height: 240,
                   child: Column(
                     mainAxisAlignment:
-                        MainAxisAlignment.center,
+                        MainAxisAlignment
+                            .center,
                     children: [
                       const Icon(
-                        Icons.cloud_upload,
+                        Icons
+                            .security,
                         size: 55,
-                        color: Colors.blue,
+                        color:
+                            Colors.blue,
                       ),
-
-                      const SizedBox(height: 15),
-
+                      const SizedBox(
+                        height: 15,
+                      ),
                       const Text(
-                        'Select a PDF to add locally',
-                        style: TextStyle(
+                        'Select a file to scan',
+                        style:
+                            TextStyle(
                           fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontWeight:
+                              FontWeight
+                                  .bold,
                         ),
                       ),
-
-                      const SizedBox(height: 15),
-
-                      ElevatedButton.icon(
+                      const SizedBox(
+                        height: 8,
+                      ),
+                      const Padding(
+                        padding:
+                            EdgeInsets
+                                .symmetric(
+                          horizontal:
+                              20,
+                        ),
+                        child:
+                            Text(
+                          'PDF, images, Office files, ZIP, TXT and CSV are supported for basic local checking.',
+                          textAlign:
+                              TextAlign
+                                  .center,
+                          style:
+                              TextStyle(
+                            color:
+                                Colors.grey,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 15,
+                      ),
+                      ElevatedButton
+                          .icon(
                         onPressed:
                             isSelectingFile
                                 ? null
                                 : pickFile,
-                        icon: isSelectingFile
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child:
-                                    CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(
-                                Icons.upload_file,
-                              ),
-                        label: Text(
+                        icon:
+                            isSelectingFile
+                                ? const SizedBox(
+                                    width:
+                                        20,
+                                    height:
+                                        20,
+                                    child:
+                                        CircularProgressIndicator(
+                                      strokeWidth:
+                                          2,
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons
+                                        .upload_file,
+                                  ),
+                        label:
+                            Text(
                           isSelectingFile
-                              ? 'Selecting...'
-                              : 'Choose PDF',
+                              ? 'Scanning...'
+                              : 'Choose File',
                         ),
                       ),
                     ],
@@ -742,165 +1080,291 @@ class _UploadPageState extends State<UploadPage> {
                 ),
               ),
 
-              const SizedBox(height: 25),
+              const SizedBox(
+                height: 25,
+              ),
 
-              if (selectedFileName != null)
+              // -------------------------------------------------
+              // SELECTED FILE
+              // -------------------------------------------------
+
+              if (selectedFileName !=
+                  null)
                 Card(
                   child: ListTile(
-                    leading: const Icon(
-                      Icons.picture_as_pdf,
-                      color: Colors.red,
+                    leading:
+                        Icon(
+                      _getFileIcon(),
+                      color:
+                          isSelectedPdf
+                              ? Colors.red
+                              : Colors.blue,
                       size: 35,
                     ),
-                    title: Text(
+                    title:
+                        Text(
                       selectedFileName!,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
+                      style:
+                          const TextStyle(
+                        fontWeight:
+                            FontWeight.bold,
                       ),
                       maxLines: 1,
                       overflow:
-                          TextOverflow.ellipsis,
+                          TextOverflow
+                              .ellipsis,
                     ),
-                    subtitle: Column(
+                    subtitle:
+                        Column(
                       crossAxisAlignment:
-                          CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
+                          CrossAxisAlignment
+                              .start,
+                      mainAxisSize:
+                          MainAxisSize
+                              .min,
                       children: [
-                        Text(getFileSize()),
-                        const SizedBox(height: 4),
                         Text(
-                          'PDF validated locally',
-                          style: TextStyle(
-                            color:
-                                Colors.green.shade700,
+                          getFileSize(),
+                        ),
+                        const SizedBox(
+                          height: 4,
+                        ),
+                        Text(
+                          _getSelectedFileLabel(),
+                          style:
+                              TextStyle(
+                            color: Colors
+                                .green
+                                .shade700,
                             fontWeight:
-                                FontWeight.w600,
+                                FontWeight
+                                    .w600,
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 4,
+                        ),
+                        Text(
+                          'Detected type: ${_getDetectedTypeName()}',
+                          style:
+                              const TextStyle(
+                            color:
+                                Colors.grey,
                           ),
                         ),
                       ],
                     ),
-                    trailing: IconButton(
+                    trailing:
+                        IconButton(
                       tooltip:
                           'Remove selected file',
-                      onPressed: removeSelection,
-                      icon: const Icon(
+                      onPressed:
+                          removeSelection,
+                      icon:
+                          const Icon(
                         Icons.close,
-                        color: Colors.grey,
+                        color:
+                            Colors.grey,
                       ),
                     ),
                   ),
                 ),
 
-              if (selectedFileName != null) ...[
-                const SizedBox(height: 8),
-                const Padding(
-                  padding:
-                      EdgeInsets.symmetric(
-                    horizontal: 4,
-                  ),
-                  child: Text(
-                    'This file is available locally; cloud upload is unavailable until Firebase Storage is enabled.',
-                    style: TextStyle(
-                      color: Colors.grey,
+              // -------------------------------------------------
+              // SECURITY REPORT
+              // -------------------------------------------------
+
+              if (selectedFileName !=
+                  null) ...[
+                const SizedBox(
+                  height: 12,
+                ),
+                SizedBox(
+                  width:
+                      double.infinity,
+                  child:
+                      FilledButton.icon(
+                    onPressed:
+                        _openSecurityReport,
+                    icon:
+                        const Icon(
+                      Icons.security,
+                    ),
+                    label:
+                        const Text(
+                      'View Security Report',
                     ),
                   ),
                 ),
               ],
 
-              const SizedBox(height: 20),
+              if (selectedFileName !=
+                  null) ...[
+                const SizedBox(
+                  height: 8,
+                ),
+                Padding(
+                  padding:
+                      const EdgeInsets
+                          .symmetric(
+                    horizontal: 4,
+                  ),
+                  child:
+                      Text(
+                    isSelectedPdf
+                        ? 'This PDF is available in the temporary local workspace. Cloud upload is unavailable until Firebase Storage is enabled.'
+                        : 'This file passed the basic local security scan. Non-PDF files are not added to the current PDF workspace.',
+                    style:
+                        const TextStyle(
+                      color:
+                          Colors.grey,
+                    ),
+                  ),
+                ),
+              ],
 
-              if (selectedFile != null)
+              // -------------------------------------------------
+              // CLOUD UPLOAD
+              // -------------------------------------------------
+
+              if (selectedFile !=
+                  null) ...[
+                const SizedBox(
+                  height: 20,
+                ),
                 SizedBox(
-                  width: double.infinity,
+                  width:
+                      double.infinity,
                   height: 55,
-                  child: ElevatedButton.icon(
+                  child:
+                      ElevatedButton
+                          .icon(
                     onPressed:
                         showStorageUnavailable,
-                    icon: const Icon(
-                      Icons.cloud_upload,
+                    icon:
+                        const Icon(
+                      Icons
+                          .cloud_upload,
                     ),
-                    label: const Text(
+                    label:
+                        const Text(
                       'Upload to Cloud',
                     ),
                   ),
                 ),
-
-              if (selectedFile != null) ...[
-                const SizedBox(height: 15),
+                const SizedBox(
+                  height: 15,
+                ),
                 const Text(
                   'Cloud upload is unavailable because Firebase Storage is not configured or enabled.',
-                  style: TextStyle(
-                    color: Colors.grey,
+                  style:
+                      TextStyle(
+                    color:
+                        Colors.grey,
                   ),
                 ),
               ],
 
-              const SizedBox(height: 25),
+              // -------------------------------------------------
+              // LOCAL PDF WORKSPACE
+              // -------------------------------------------------
+
+              const SizedBox(
+                height: 25,
+              ),
 
               const Text(
-                'Local Workspace',
-                style: TextStyle(
+                'Local PDF Workspace',
+                style:
+                    TextStyle(
                   fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                  fontWeight:
+                      FontWeight.bold,
                 ),
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(
+                height: 10,
+              ),
 
               AnimatedBuilder(
-                animation: localFileWorkspace,
-                builder: (context, _) {
+                animation:
+                    localFileWorkspace,
+                builder:
+                    (context, _) {
                   final entries =
-                      localFileWorkspace.entries;
+                      localFileWorkspace
+                          .entries;
 
-                  if (entries.isEmpty) {
+                  if (entries
+                      .isEmpty) {
                     return const Card(
-                      child: ListTile(
-                        leading: Icon(
-                          Icons.folder_open,
-                          color: Colors.grey,
+                      child:
+                          ListTile(
+                        leading:
+                            Icon(
+                          Icons
+                              .folder_open,
+                          color:
+                              Colors.grey,
                         ),
-                        title: Text(
-                          'No local files yet',
+                        title:
+                            Text(
+                          'No local PDFs yet',
                         ),
-                        subtitle: Text(
-                          'Validated PDFs added here stay in memory on this device. They are not uploaded to Firebase Storage.',
+                        subtitle:
+                            Text(
+                          'Validated PDFs added here stay in memory on this device. Other file types are scanned but are not added to this PDF workspace.',
                         ),
                       ),
                     );
                   }
 
                   return Card(
-                    child: Column(
+                    child:
+                        Column(
                       children: [
                         ListTile(
-                          leading: const Icon(
-                            Icons.folder,
-                            color: Colors.blue,
+                          leading:
+                              const Icon(
+                            Icons
+                                .folder,
+                            color:
+                                Colors.blue,
                           ),
-                          title: Text(
-                            '${entries.length} local file${entries.length == 1 ? '' : 's'}',
+                          title:
+                              Text(
+                            '${entries.length} local PDF${entries.length == 1 ? '' : 's'}',
                           ),
-                          subtitle: Text(
+                          subtitle:
+                              Text(
                             'Total: ${formatFileSize(localFileWorkspace.totalSizeBytes)}',
                           ),
                         ),
-
-                        ...entries.map(
-                          (entry) => ListTile(
-                            dense: true,
+                        ...entries
+                            .map(
+                          (entry) =>
+                              ListTile(
+                            dense:
+                                true,
                             leading:
                                 const Icon(
-                              Icons.picture_as_pdf,
-                              color: Colors.red,
+                              Icons
+                                  .picture_as_pdf,
+                              color:
+                                  Colors.red,
                             ),
-                            title: Text(
+                            title:
+                                Text(
                               entry.name,
-                              maxLines: 1,
+                              maxLines:
+                                  1,
                               overflow:
-                                  TextOverflow.ellipsis,
+                                  TextOverflow
+                                      .ellipsis,
                             ),
-                            subtitle: Text(
+                            subtitle:
+                                Text(
                               formatFileSize(
                                 entry.sizeBytes,
                               ),
@@ -908,14 +1372,16 @@ class _UploadPageState extends State<UploadPage> {
                             trailing:
                                 IconButton(
                               tooltip:
-                                  'Remove local file',
-                              onPressed: () =>
-                                  removeWorkspaceEntry(
+                                  'Remove local PDF',
+                              onPressed:
+                                  () =>
+                                      removeWorkspaceEntry(
                                 entry,
                               ),
                               icon:
                                   const Icon(
-                                Icons.delete_outline,
+                                Icons
+                                    .delete_outline,
                               ),
                             ),
                           ),
@@ -926,28 +1392,44 @@ class _UploadPageState extends State<UploadPage> {
                 },
               ),
 
-              const SizedBox(height: 25),
+              // -------------------------------------------------
+              // RECENT UPLOADS
+              // -------------------------------------------------
+
+              const SizedBox(
+                height: 25,
+              ),
 
               const Text(
                 'Recent Uploads',
-                style: TextStyle(
+                style:
+                    TextStyle(
                   fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                  fontWeight:
+                      FontWeight.bold,
                 ),
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(
+                height: 10,
+              ),
 
               const Card(
-                child: ListTile(
-                  leading: Icon(
-                    Icons.info_outline,
-                    color: Colors.grey,
+                child:
+                    ListTile(
+                  leading:
+                      Icon(
+                    Icons
+                        .info_outline,
+                    color:
+                        Colors.grey,
                   ),
-                  title: Text(
+                  title:
+                      Text(
                     'No recent cloud uploads',
                   ),
-                  subtitle: Text(
+                  subtitle:
+                      Text(
                     'Live cloud listings and cloud uploads are unavailable because Firebase Storage is not enabled or configured.',
                   ),
                 ),
@@ -960,7 +1442,8 @@ class _UploadPageState extends State<UploadPage> {
   }
 }
 
-class _ScanCheckRow extends StatelessWidget {
+class _ScanCheckRow
+    extends StatelessWidget {
   const _ScanCheckRow({
     required this.label,
     required this.passed,
@@ -970,10 +1453,14 @@ class _ScanCheckRow extends StatelessWidget {
   final bool passed;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Padding(
       padding:
-          const EdgeInsets.symmetric(vertical: 4),
+          const EdgeInsets.symmetric(
+        vertical: 4,
+      ),
       child: Row(
         children: [
           Icon(
@@ -981,19 +1468,28 @@ class _ScanCheckRow extends StatelessWidget {
                 ? Icons.check_circle
                 : Icons.cancel,
             color:
-                passed ? Colors.green : Colors.red,
+                passed
+                    ? Colors.green
+                    : Colors.red,
             size: 20,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(
+            width: 8,
+          ),
           Expanded(
             child: Text(label),
           ),
           Text(
-            passed ? 'Passed' : 'Failed',
-            style: TextStyle(
-              color:
-                  passed ? Colors.green : Colors.red,
-              fontWeight: FontWeight.w600,
+            passed
+                ? 'Passed'
+                : 'Failed',
+            style:
+                TextStyle(
+              color: passed
+                  ? Colors.green
+                  : Colors.red,
+              fontWeight:
+                  FontWeight.w600,
             ),
           ),
         ],
@@ -1002,7 +1498,8 @@ class _ScanCheckRow extends StatelessWidget {
   }
 }
 
-class _InfoRow extends StatelessWidget {
+class _InfoRow
+    extends StatelessWidget {
   const _InfoRow({
     required this.label,
     required this.value,
@@ -1012,10 +1509,14 @@ class _InfoRow extends StatelessWidget {
   final String value;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Padding(
       padding:
-          const EdgeInsets.symmetric(vertical: 4),
+          const EdgeInsets.symmetric(
+        vertical: 4,
+      ),
       child: Row(
         crossAxisAlignment:
             CrossAxisAlignment.start,
@@ -1024,7 +1525,8 @@ class _InfoRow extends StatelessWidget {
             width: 125,
             child: Text(
               label,
-              style: const TextStyle(
+              style:
+                  const TextStyle(
                 color: Colors.grey,
               ),
             ),
@@ -1032,8 +1534,10 @@ class _InfoRow extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
+              style:
+                  const TextStyle(
+                fontWeight:
+                    FontWeight.w600,
               ),
             ),
           ),
@@ -1043,7 +1547,8 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-class PdfDetailsPage extends StatelessWidget {
+class PdfDetailsPage
+    extends StatelessWidget {
   const PdfDetailsPage({
     super.key,
     required this.entry,
@@ -1051,10 +1556,15 @@ class PdfDetailsPage extends StatelessWidget {
 
   final LocalPdfEntry entry;
 
-  String formatFileSize(int size) {
-    if (size < 1024) return '$size bytes';
+  String formatFileSize(
+    int size,
+  ) {
+    if (size < 1024) {
+      return '$size bytes';
+    }
 
-    if (size < 1024 * 1024) {
+    if (size <
+        1024 * 1024) {
       return '${(size / 1024).toStringAsFixed(2)} KB';
     }
 
@@ -1067,51 +1577,73 @@ class PdfDetailsPage extends StatelessWidget {
     final shouldRemove =
         await showDialog<bool>(
       context: context,
-      builder: (context) =>
-          AlertDialog(
-        title: const Text(
+      builder:
+          (context) =>
+              AlertDialog(
+        title:
+            const Text(
           'Remove local PDF?',
         ),
-        content: Text(
+        content:
+            Text(
           'Remove “${entry.name}” from the temporary local workspace? No cloud file will be affected.',
         ),
         actions: [
           TextButton(
             onPressed: () =>
-                Navigator.of(context)
-                    .pop(false),
-            child: const Text('Cancel'),
+                Navigator.of(
+                  context,
+                ).pop(false),
+            child:
+                const Text(
+              'Cancel',
+            ),
           ),
           FilledButton(
             onPressed: () =>
-                Navigator.of(context)
-                    .pop(true),
-            child: const Text('Remove'),
+                Navigator.of(
+                  context,
+                ).pop(true),
+            child:
+                const Text(
+              'Remove',
+            ),
           ),
         ],
       ),
     );
 
-    if (shouldRemove == true &&
+    if (shouldRemove ==
+            true &&
         context.mounted) {
-      localFileWorkspace.remove(entry);
-      Navigator.of(context).pop();
+      localFileWorkspace
+          .remove(entry);
+
+      Navigator.of(
+        context,
+      ).pop();
     }
   }
 
   void openFullScreenPreview(
     BuildContext context,
   ) {
-    final bytes = entry.bytes;
+    final bytes =
+        entry.bytes;
 
-    if (bytes == null || bytes.isEmpty) {
+    if (bytes == null ||
+        bytes.isEmpty) {
       return;
     }
 
-    Navigator.of(context).push(
+    Navigator.of(
+      context,
+    ).push(
       MaterialPageRoute<void>(
-        builder: (_) => PdfReaderPage(
-          fileName: entry.name,
+        builder: (_) =>
+            PdfReaderPage(
+          fileName:
+              entry.name,
           bytes: bytes,
         ),
       ),
@@ -1121,33 +1653,48 @@ class PdfDetailsPage extends StatelessWidget {
   Widget buildPreview(
     BuildContext context,
   ) {
-    final bytes = entry.bytes;
+    final bytes =
+        entry.bytes;
 
-    if (bytes == null || bytes.isEmpty) {
+    if (bytes == null ||
+        bytes.isEmpty) {
       return const Card(
         child: Padding(
-          padding: EdgeInsets.all(20),
+          padding:
+              EdgeInsets.all(20),
           child: Column(
             children: [
               Icon(
-                Icons.preview_outlined,
+                Icons
+                    .preview_outlined,
                 size: 42,
-                color: Colors.grey,
+                color:
+                    Colors.grey,
               ),
-              SizedBox(height: 10),
+              SizedBox(
+                height: 10,
+              ),
               Text(
                 'Preview is unavailable for this entry.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
+                textAlign:
+                    TextAlign.center,
+                style:
+                    TextStyle(
+                  fontWeight:
+                      FontWeight.w600,
                 ),
               ),
-              SizedBox(height: 6),
+              SizedBox(
+                height: 6,
+              ),
               Text(
                 'The file metadata is available, but the PDF bytes were not retained by the local picker.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.grey,
+                textAlign:
+                    TextAlign.center,
+                style:
+                    TextStyle(
+                  color:
+                      Colors.grey,
                 ),
               ),
             ],
@@ -1158,34 +1705,51 @@ class PdfDetailsPage extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding:
+            const EdgeInsets.all(
+          20,
+        ),
         child: Column(
           children: [
             const Icon(
-              Icons.picture_as_pdf,
+              Icons
+                  .picture_as_pdf,
               size: 48,
-              color: Colors.red,
+              color:
+                  Colors.red,
             ),
-            const SizedBox(height: 10),
+            const SizedBox(
+              height: 10,
+            ),
             const Text(
               'Open the complete PDF in full-screen preview.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
+              textAlign:
+                  TextAlign.center,
+              style:
+                  TextStyle(
+                fontWeight:
+                    FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(
+              height: 14,
+            ),
             SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
+              width:
+                  double.infinity,
+              child:
+                  FilledButton.icon(
                 onPressed: () =>
                     openFullScreenPreview(
                   context,
                 ),
-                icon: const Icon(
-                  Icons.open_in_full,
+                icon:
+                    const Icon(
+                  Icons
+                      .open_in_full,
                 ),
-                label: const Text(
+                label:
+                    const Text(
                   'Open Full-Screen Preview',
                 ),
               ),
@@ -1197,79 +1761,111 @@ class PdfDetailsPage extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title:
+            const Text(
           'PDF Details',
         ),
         actions: [
           IconButton(
-            tooltip: 'Remove local PDF',
+            tooltip:
+                'Remove local PDF',
             onPressed: () =>
-                confirmRemove(context),
-            icon: const Icon(
-              Icons.delete_outline,
+                confirmRemove(
+              context,
+            ),
+            icon:
+                const Icon(
+              Icons
+                  .delete_outline,
             ),
           ),
         ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+        child:
+            SingleChildScrollView(
+          padding:
+              const EdgeInsets.all(
+            20,
+          ),
           child: Column(
             crossAxisAlignment:
                 CrossAxisAlignment.start,
             children: [
               Row(
                 crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                    CrossAxisAlignment
+                        .start,
                 children: [
                   const Icon(
-                    Icons.picture_as_pdf,
-                    color: Colors.red,
+                    Icons
+                        .picture_as_pdf,
+                    color:
+                        Colors.red,
                     size: 42,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(
+                    width: 12,
+                  ),
                   Expanded(
-                    child: Text(
+                    child:
+                        Text(
                       entry.name,
-                      style: const TextStyle(
+                      style:
+                          const TextStyle(
                         fontSize: 22,
-                        fontWeight: FontWeight.bold,
+                        fontWeight:
+                            FontWeight
+                                .bold,
                       ),
                     ),
                   ),
                 ],
               ),
-
-              const SizedBox(height: 18),
-
+              const SizedBox(
+                height: 18,
+              ),
               Card(
                 child: Padding(
                   padding:
-                      const EdgeInsets.all(16),
-                  child: Column(
+                      const EdgeInsets
+                          .all(
+                    16,
+                  ),
+                  child:
+                      Column(
                     children: [
                       _DetailRow(
-                        label: 'File name',
-                        value: entry.name,
+                        label:
+                            'File name',
+                        value:
+                            entry.name,
                       ),
                       _DetailRow(
-                        label: 'File size',
-                        value: formatFileSize(
-                          entry.sizeBytes,
+                        label:
+                            'File size',
+                        value:
+                            formatFileSize(
+                          entry
+                              .sizeBytes,
                         ),
                       ),
                       const _DetailRow(
-                        label: 'Validation',
+                        label:
+                            'Validation',
                         value:
                             'PDF validated locally',
                         valueColor:
                             Colors.green,
                       ),
                       const _DetailRow(
-                        label: 'Storage status',
+                        label:
+                            'Storage status',
                         value:
                             'Temporary local workspace only',
                       ),
@@ -1277,37 +1873,47 @@ class PdfDetailsPage extends StatelessWidget {
                   ),
                 ),
               ),
-
-              const SizedBox(height: 14),
-
+              const SizedBox(
+                height: 14,
+              ),
               const Card(
-                child: ListTile(
-                  leading: Icon(
-                    Icons.lock_outline,
-                    color: Colors.blue,
+                child:
+                    ListTile(
+                  leading:
+                      Icon(
+                    Icons
+                        .lock_outline,
+                    color:
+                        Colors.blue,
                   ),
-                  title: Text(
+                  title:
+                      Text(
                     'Storage Honesty',
                   ),
-                  subtitle: Text(
+                  subtitle:
+                      Text(
                     'This preview uses PDF bytes kept in this device memory. Nothing is uploaded to Firebase Storage, which is currently disabled or not configured.',
                   ),
                 ),
               ),
-
-              const SizedBox(height: 20),
-
+              const SizedBox(
+                height: 20,
+              ),
               const Text(
                 'Preview',
-                style: TextStyle(
+                style:
+                    TextStyle(
                   fontSize: 22,
-                  fontWeight: FontWeight.bold,
+                  fontWeight:
+                      FontWeight.bold,
                 ),
               ),
-
-              const SizedBox(height: 10),
-
-              buildPreview(context),
+              const SizedBox(
+                height: 10,
+              ),
+              buildPreview(
+                context,
+              ),
             ],
           ),
         ),
@@ -1316,7 +1922,8 @@ class PdfDetailsPage extends StatelessWidget {
   }
 }
 
-class PdfReaderPage extends StatefulWidget {
+class PdfReaderPage
+    extends StatefulWidget {
   const PdfReaderPage({
     super.key,
     required this.fileName,
@@ -1327,35 +1934,55 @@ class PdfReaderPage extends StatefulWidget {
   final Uint8List bytes;
 
   @override
-  State<PdfReaderPage> createState() =>
-      _PdfReaderPageState();
+  State<PdfReaderPage>
+      createState() =>
+          _PdfReaderPageState();
 }
 
 class _PdfReaderPageState
     extends State<PdfReaderPage> {
-  static const double _minimumZoom = 0.75;
-  static const double _maximumZoom = 4.0;
-  static const double _zoomStep = 0.25;
-  static const double _defaultZoom = 2.0;
+  static const double
+      _minimumZoom =
+      0.75;
 
-  final PdfViewerController _controller =
+  static const double
+      _maximumZoom =
+      4.0;
+
+  static const double
+      _zoomStep =
+      0.25;
+
+  static const double
+      _defaultZoom =
+      2.0;
+
+  final PdfViewerController
+      _controller =
       PdfViewerController();
 
   int _pageCount = 0;
   int _currentPage = 0;
-  double _zoomLevel = _defaultZoom;
 
-  void _jumpToPage(int? page) {
+  double _zoomLevel =
+      _defaultZoom;
+
+  void _jumpToPage(
+    int? page,
+  ) {
     if (page == null ||
         page < 1 ||
         page > _pageCount) {
       return;
     }
 
-    _controller.jumpToPage(page);
+    _controller
+        .jumpToPage(page);
   }
 
-  void _changeZoom(double amount) {
+  void _changeZoom(
+    double amount,
+  ) {
     final nextZoom =
         (_zoomLevel + amount)
             .clamp(
@@ -1364,97 +1991,124 @@ class _PdfReaderPageState
             )
             .toDouble();
 
-    _controller.zoomLevel = nextZoom;
+    _controller.zoomLevel =
+        nextZoom;
 
     setState(() {
-      _zoomLevel = nextZoom;
+      _zoomLevel =
+          nextZoom;
     });
   }
 
   void _resetZoom() {
-    _controller.zoomLevel = _defaultZoom;
+    _controller.zoomLevel =
+        _defaultZoom;
 
     setState(() {
-      _zoomLevel = _defaultZoom;
+      _zoomLevel =
+          _defaultZoom;
     });
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
           widget.fileName,
           maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+          overflow:
+              TextOverflow.ellipsis,
         ),
         actions: [
           IconButton(
-            tooltip: 'Zoom out',
+            tooltip:
+                'Zoom out',
             onPressed:
-                _zoomLevel > _minimumZoom
-                    ? () => _changeZoom(
+                _zoomLevel >
+                        _minimumZoom
+                    ? () =>
+                        _changeZoom(
                           -_zoomStep,
                         )
                     : null,
-            icon: const Icon(
+            icon:
+                const Icon(
               Icons.zoom_out,
             ),
           ),
-
           IconButton(
-            tooltip: 'Reset zoom',
+            tooltip:
+                'Reset zoom',
             onPressed:
-                _zoomLevel == _defaultZoom
+                _zoomLevel ==
+                        _defaultZoom
                     ? null
                     : _resetZoom,
-            icon: const Icon(
+            icon:
+                const Icon(
               Icons.fit_screen,
             ),
           ),
-
           IconButton(
-            tooltip: 'Zoom in',
+            tooltip:
+                'Zoom in',
             onPressed:
-                _zoomLevel < _maximumZoom
-                    ? () => _changeZoom(
+                _zoomLevel <
+                        _maximumZoom
+                    ? () =>
+                        _changeZoom(
                           _zoomStep,
                         )
                     : null,
-            icon: const Icon(
+            icon:
+                const Icon(
               Icons.zoom_in,
             ),
           ),
-
-          if (_pageCount > 0)
+          if (_pageCount >
+              0)
             Padding(
               padding:
-                  const EdgeInsets.only(
+                  const EdgeInsets
+                      .only(
                 right: 12,
               ),
-              child: Center(
-                child: DropdownButton<int>(
+              child:
+                  Center(
+                child:
+                    DropdownButton<
+                        int>(
                   value:
-                      _currentPage == 0
+                      _currentPage ==
+                              0
                           ? 1
                           : _currentPage,
                   underline:
-                      const SizedBox.shrink(),
+                      const SizedBox
+                          .shrink(),
                   dropdownColor:
-                      Theme.of(context)
+                      Theme.of(
+                    context,
+                  )
                           .colorScheme
                           .surface,
                   onChanged:
                       _jumpToPage,
                   items:
                       List<
-                          DropdownMenuItem<int>
-                      >.generate(
+                          DropdownMenuItem<
+                              int>>.generate(
                     _pageCount,
                     (index) =>
-                        DropdownMenuItem<int>(
-                      value: index + 1,
-                      child: Text(
+                        DropdownMenuItem<
+                            int>(
+                      value:
+                          index + 1,
+                      child:
+                          Text(
                         'Page ${index + 1}',
                       ),
                     ),
@@ -1464,37 +2118,62 @@ class _PdfReaderPageState
             ),
         ],
       ),
-      body: SfPdfViewer.memory(
+      body:
+          SfPdfViewer.memory(
         widget.bytes,
-        controller: _controller,
+        controller:
+            _controller,
         pageLayoutMode:
-            PdfPageLayoutMode.single,
+            PdfPageLayoutMode
+                .single,
         scrollDirection:
-            PdfScrollDirection.vertical,
+            PdfScrollDirection
+                .vertical,
         pageSpacing: 8,
-        maxZoomLevel: _maximumZoom,
-        enableDoubleTapZooming: true,
-        enableTextSelection: true,
-        canShowScrollHead: true,
-        canShowScrollStatus: true,
-        onDocumentLoaded: (details) {
-          if (!mounted) return;
+        maxZoomLevel:
+            _maximumZoom,
+        enableDoubleTapZooming:
+            true,
+        enableTextSelection:
+            true,
+        canShowScrollHead:
+            true,
+        canShowScrollStatus:
+            true,
+        onDocumentLoaded:
+            (details) {
+          if (!mounted) {
+            return;
+          }
 
           setState(() {
             _pageCount =
-                details.document.pages.count;
-            _currentPage = 1;
-            _controller.zoomLevel =
+                details
+                    .document
+                    .pages
+                    .count;
+
+            _currentPage =
+                1;
+
+            _controller
+                    .zoomLevel =
                 _defaultZoom;
-            _zoomLevel = _defaultZoom;
+
+            _zoomLevel =
+                _defaultZoom;
           });
         },
-        onPageChanged: (details) {
-          if (!mounted) return;
+        onPageChanged:
+            (details) {
+          if (!mounted) {
+            return;
+          }
 
           setState(() {
             _currentPage =
-                details.newPageNumber;
+                details
+                    .newPageNumber;
           });
         },
       ),
@@ -1502,7 +2181,8 @@ class _PdfReaderPageState
   }
 }
 
-class _DetailRow extends StatelessWidget {
+class _DetailRow
+    extends StatelessWidget {
   const _DetailRow({
     required this.label,
     required this.value,
@@ -1514,31 +2194,40 @@ class _DetailRow extends StatelessWidget {
   final Color? valueColor;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Padding(
       padding:
-          const EdgeInsets.symmetric(
+          const EdgeInsets
+              .symmetric(
         vertical: 8,
       ),
       child: Row(
         crossAxisAlignment:
-            CrossAxisAlignment.start,
+            CrossAxisAlignment
+                .start,
         children: [
           SizedBox(
             width: 120,
             child: Text(
               label,
-              style: const TextStyle(
-                color: Colors.grey,
+              style:
+                  const TextStyle(
+                color:
+                    Colors.grey,
               ),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: valueColor,
+              style:
+                  TextStyle(
+                fontWeight:
+                    FontWeight.w600,
+                color:
+                    valueColor,
               ),
             ),
           ),

@@ -48,6 +48,24 @@ class FileTypeDetector {
       );
     }
 
+    // GIF
+    if (_isGif(bytes)) {
+      return const DetectedFileType(
+        name: 'GIF',
+        extension: '.gif',
+        extensionLabel: '.gif',
+      );
+    }
+
+    // WebP
+    if (_isWebP(bytes)) {
+      return const DetectedFileType(
+        name: 'WebP',
+        extension: '.webp',
+        extensionLabel: '.webp',
+      );
+    }
+
     // Modern Microsoft Office formats:
     // DOCX / XLSX / PPTX are ZIP-based files.
     if (_isZip(bytes)) {
@@ -74,6 +92,13 @@ class FileTypeDetector {
           extensionLabel: '.pptx',
         );
       }
+
+      // Generic ZIP file
+      return const DetectedFileType(
+        name: 'ZIP',
+        extension: '.zip',
+        extensionLabel: '.zip',
+      );
     }
 
     // Legacy Microsoft Office formats:
@@ -146,6 +171,55 @@ class FileTypeDetector {
     return _startsWith(bytes, signature);
   }
 
+  bool _isGif(Uint8List bytes) {
+    const signature = <int>[
+      0x47,
+      0x49,
+      0x46,
+      0x38,
+    ];
+
+    return _startsWith(bytes, signature);
+  }
+
+  bool _isWebP(Uint8List bytes) {
+    const riffSignature = <int>[
+      0x52,
+      0x49,
+      0x46,
+      0x46,
+    ];
+
+    const webpSignature = <int>[
+      0x57,
+      0x45,
+      0x42,
+      0x50,
+    ];
+
+    // WebP files start with RIFF.
+    if (!_startsWith(bytes, riffSignature)) {
+      return false;
+    }
+
+    // Need at least:
+    // 4 bytes RIFF
+    // 4 bytes file size
+    // 4 bytes WEBP
+    if (bytes.length < 12) {
+      return false;
+    }
+
+    // WEBP must be present at byte 8.
+    for (var index = 0; index < webpSignature.length; index++) {
+      if (bytes[8 + index] != webpSignature[index]) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   bool _isZip(Uint8List bytes) {
     const localFileHeader = <int>[
       0x50,
@@ -170,23 +244,6 @@ class FileTypeDetector {
     ];
 
     return _startsWith(bytes, signature);
-  }
-
-  bool _startsWith(
-    Uint8List bytes,
-    List<int> signature,
-  ) {
-    if (bytes.length < signature.length) {
-      return false;
-    }
-
-    for (var index = 0; index < signature.length; index++) {
-      if (bytes[index] != signature[index]) {
-        return false;
-      }
-    }
-
-    return true;
   }
 
   bool _containsAscii(
@@ -244,5 +301,22 @@ class FileTypeDetector {
     }
 
     return false;
+  }
+
+  bool _startsWith(
+    Uint8List bytes,
+    List<int> signature,
+  ) {
+    if (bytes.length < signature.length) {
+      return false;
+    }
+
+    for (var index = 0; index < signature.length; index++) {
+      if (bytes[index] != signature[index]) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }

@@ -10,6 +10,7 @@ import 'security_status.dart';
 import 'settings_page.dart';
 import 'storage_page.dart';
 import 'upload_page.dart';
+import 'video_link_player_page.dart';
 
 class CloudGuardHome extends StatelessWidget {
   const CloudGuardHome({super.key});
@@ -69,8 +70,7 @@ class CloudGuardHome extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final useSingleColumnActions =
-                  constraints.maxWidth < 360;
+              final useSingleColumnActions = constraints.maxWidth < 360;
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,8 +107,7 @@ class CloudGuardHome extends StatelessWidget {
                         children: [
                           Expanded(
                             child: Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   'Firebase Account',
@@ -181,8 +180,7 @@ class CloudGuardHome extends StatelessWidget {
                         16,
                       ),
                       child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           ListTile(
                             leading: const Icon(
@@ -209,11 +207,9 @@ class CloudGuardHome extends StatelessWidget {
                               0,
                             ),
                             child: LinearProgressIndicator(
-                              value:
-                                  securitySummary.score / 100,
+                              value: securitySummary.score / 100,
                               minHeight: 6,
-                              borderRadius:
-                                  BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(8),
                               semanticsLabel:
                                   'Firebase account setup '
                                   '${securitySummary.score} percent, '
@@ -310,6 +306,16 @@ class CloudGuardHome extends StatelessWidget {
                     icon: Icons.verified_user,
                     title: 'File Integrity',
                     page: const FileIntegrityPage(),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // NEW: Video Link Player
+                  _actionButton(
+                    context,
+                    icon: Icons.play_circle_fill,
+                    title: 'Video Link Player',
+                    page: const VideoLinkPlayerPage(),
                   ),
 
                   const SizedBox(height: 16),
@@ -450,9 +456,7 @@ class ActionCard extends StatelessWidget {
               Icon(
                 icon,
                 size: 35,
-                color: Theme.of(context)
-                    .colorScheme
-                    .primary,
+                color: Theme.of(context).colorScheme.primary,
               ),
 
               const SizedBox(height: 12),

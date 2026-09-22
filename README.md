@@ -10,7 +10,7 @@
 [![Cursor](https://img.shields.io/badge/AI%20Assisted-Cursor-000000?logo=cursor&logoColor=white)](https://cursor.com/)
 [![Codex](https://img.shields.io/badge/AI%20Assisted-Codex-412991?logo=openai&logoColor=white)](https://openai.com/codex/)
 
-A Flutter-based cloud security and file-management MVP focused on honest account-security information, local PDF validation, a temporary local file workspace, file security scanning, file type mismatch detection, file integrity checking, App Lock PIN and biometric protection, auto-lock controls, theme settings, functional browser notifications, and a custom Android update notification system.
+A Flutter-based cloud security and file-management MVP focused on honest account-security information, local PDF validation, a temporary local file workspace, file security scanning, file type mismatch detection, suspicious and dangerous file detection, file security reporting, file integrity checking, App Lock PIN and biometric protection, auto-lock controls, theme settings, functional browser notifications, a custom Android update notification system, and direct video link playback.
 
 ## 🔗 Try Cloud Guard
 
@@ -35,7 +35,7 @@ Cloud Guard is currently in **MVP development**.
 | Firebase Authentication | Available and tested |
 | Account-security summary | Available and tested |
 | Local PDF selection and validation | Available and tested |
-| Basic File Security Scanner | Available and tested |
+| Basic File Security Scanner | Available and tested, including extension, signature, size, filename, duplicate, suspicious-name, and dangerous-extension checks |
 | File Type Mismatch Detection | Available and tested |
 | Local PDF workspace | Available and tested |
 | App Lock PIN | Available and tested |
@@ -44,12 +44,14 @@ Cloud Guard is currently in **MVP development**.
 | Security Settings theme compatibility | Available and tested |
 | Browser notifications | Available and tested |
 | Flutter Web Demo | Deployed and verified through GitHub Pages |
-| Android release APK | Built, installed, and tested on an Android device |
+| Android release APK | Built and available through GitHub Releases; latest changes require a new release build |
 | Firebase Storage cloud uploads | Unavailable; Storage is not enabled or configured |
 | Google Sign-In | Available and tested |
 | App Lock Auto-Lock | Available with configurable lock duration |
-| Android release APK | Built; latest release device testing pending |
 | File Integrity Checker | Available and tested |
+| File Security Report | Available and tested |
+| Video Link Player | Available and tested for supported direct video links |
+| TeraBox integration | Research and official API integration groundwork completed; authorization and playable-stream integration pending |
 
 
 > **Storage honesty:** Cloud Guard does not simulate cloud uploads, upload progress, cloud quota, stored cloud files, or successful cloud-upload messages. Firebase Storage is not currently enabled or configured for live uploads.
@@ -64,9 +66,10 @@ Cloud Guard is currently in **MVP development**.
 | 🔔 | Notifications | Functional browser notifications with persistent enable/disable settings, browser notification permission handling, and a test notification feature. |
 | ✅ | Account security | A transparent account-setup summary based only on Firebase account facts. It is not a risk or threat score. |
 | 📄 | PDF validation | Case-insensitive `.pdf` validation, `%PDF-` signature checking, and a 10 MB size limit. |
-| 🛡️ | Basic File Security Scanner | Performs basic local checks for file extension, file signature, file size, filename safety, and duplicate detection before a file is added to the local workspace. |
+| 🛡️ | Basic File Security Scanner | Performs basic local checks for file extension, file signature, file size, filename safety, duplicate detection, suspicious double extensions, and dangerous file extensions before a file is accepted. |
 | 🔍 | File Type Mismatch Detection | Checks the actual file signature and detects when the file content does not match its current extension, including PDF, PNG, JPG, and JPEG detection. |
 | 🔐 | File Integrity Checker | Calculates real SHA-256 hashes for supported files and images and compares the current file against a locally saved trusted original baseline. |
+| 📋 | File Security Report | Shows a detailed local security report containing file information, security-check results, SHA-256 integrity information, trusted baseline status, and the final scan result. |
 | 🗂️ | Local workspace | Add multiple validated PDFs to a temporary in-memory workspace without Firebase billing. |
 | 🔎 | Search and sort | Search local filenames and sort by name or file size. |
 | 🧹 | Safe cleanup | Remove individual entries or use confirmation-protected Clear All. |
@@ -79,6 +82,8 @@ Cloud Guard is currently in **MVP development**.
 | ⏱️ | Auto-Lock | Automatically locks the application after a configurable period in the background, including Immediately, 1 minute, 5 minutes, 15 minutes, 30 minutes, or Never. |
 | 🔄 | Update Checker | Android update checking through a trusted GitHub release manifest with version comparison and trusted release URL validation. |
 | 🤖 | Update Popup | Custom Android update notification popup with Cloud Guard branding, robot artwork, version information, release notes, and an official GitHub download action. |
+| 🎬 | Video Link Player | Plays supported direct video links inside Cloud Guard with Chewie controls, fullscreen, playback speed, mute, 10-second seeking, and center playback feedback. |
+| ☁️ | TeraBox Integration | Official TeraBox API integration groundwork for shared-link metadata and video streaming has been researched; authorization and playable-stream integration are still pending. |
 
 ## 🖥️ Current Screens
 
@@ -94,6 +99,7 @@ Cloud Guard is currently in **MVP development**.
 | 🔒 App Lock | Unlock the application using Android biometrics when available or the App Lock PIN. |
 | ⚙️ | Settings | Access account, application, theme, App Lock, Auto-Lock, and notification settings. |
 | 🔐 File Integrity | Calculate SHA-256 hashes, save a trusted original baseline, and compare the current file against that baseline. |
+| 🎬 Video Link Player | Play supported direct video links inside Cloud Guard with playback controls and fullscreen playback. |
 
 ## 📄 PDF and Local Workspace Flow
 
@@ -282,6 +288,10 @@ Security Settings headings and page backgrounds are also theme-aware so that tex
 
 * `url_launcher`
 
+* `video_player`
+
+* `chewie`
+
 ## 🚀 Platform Support
 
 | Platform | How to use Cloud Guard |
@@ -378,6 +388,8 @@ build/app/outputs/flutter-apk/app-release.apk
 | Account-security tests | `flutter test test/security_status_test.dart` |
 | PDF validation tests | `flutter test test/pdf_file_validation_test.dart` |
 | File security scanner test | `flutter test test/file_security_scanner_test.dart` |
+| File security report manual test | Select a supported file, review the File Security Report, and verify file information, security checks, SHA-256 information, baseline status, and final result |
+| Suspicious and dangerous file manual test | Test double extensions such as `invoice.pdf.exe` and dangerous extensions such as `.exe`, `.bat`, `.cmd`, `.ps1`, `.scr`, and `.com`, and verify that suspicious files are blocked |
 | Local workspace tests | `flutter test test/local_file_workspace_test.dart` |
 | File integrity service tests | `flutter test test/file_integrity_service_test.dart` |
 | File integrity storage tests | `flutter test test/file_integrity_storage_test.dart` |
@@ -387,6 +399,7 @@ build/app/outputs/flutter-apk/app-release.apk
 | App Lock manual test | Enable App Lock, verify PIN unlock and lockout behavior, and test biometric unlock on a supported Android device |
 | Auto-Lock manual test | Enable Auto-Lock, select a duration, background the application, return after the selected duration, and verify that App Lock is shown |
 | Update popup manual test | Install an older Android release, publish a newer trusted release manifest, open the app, and verify the update popup and GitHub release action |
+| Video Link Player manual test | Open Video Link Player, enter a supported direct MP4 URL, and verify playback, play/pause, 10-second seeking, volume, playback speed, fullscreen, center playback feedback, and close-video behavior |
 
 
 The current project test suite passes, and Flutter static analysis reports no issues.
@@ -414,6 +427,7 @@ For each feature, inspect the relevant files first, make a small scoped change, 
 | 7 | Add more measurable security checks from reliable data sources. | Future work |
 | 8 | Improve branding, privacy information, and release configuration. | Future work |
 | 9 | Complete Android biometric device testing and refine biometric fallback behavior if needed. | Implemented; device testing pending |
+| 10 | Complete authorized TeraBox API integration for shared-link video metadata and M3U8 playback. | Pending official API authorization and integration requirements |
 
 ## 🧾 Project History
 
@@ -479,13 +493,21 @@ For each feature, inspect the relevant files first, make a small scoped change, 
 
 * **Task 30:** Added a local File Integrity Checker using SHA-256 hashing, trusted original baselines, local baseline storage, and automated integrity service and storage tests for supported files and images.
 
+* **Task 31:** Expanded the Basic File Security Scanner with suspicious double-extension detection, dangerous extension detection, suspicious filename checks, and blocking of suspicious or dangerous files.
+
+* **Task 32:** Added a local File Security Report showing file information, security-check results, detected file type information, SHA-256 integrity information, trusted baseline status, and the final scan result.
+
+* **Task 33:** Added a Video Link Player using `video_player` and Chewie with direct video playback, fullscreen support, playback speed, mute controls, 10-second backward and forward seeking, center playback feedback, and close-video controls.
+
+* **Task 34:** Added TeraBox integration groundwork by researching the official TeraBox Open Platform APIs, designing the shared-link resolution flow, and preparing resolver architecture for future authorized video-stream integration.
+
 ## 🤝 Contributing
 
 Cloud Guard is an MVP under active development. Keep changes focused, preserve existing authentication and UI behavior unless a task specifically requires otherwise, test changes locally, and document new functionality in this README.
 
 ## 📝 Development Notes
 
-Cloud Guard has been developed with assistance from ChatGPT, OpenAI Codex, and Cursor for code analysis, authentication routing, responsive-layout improvements, PDF validation, security-status modeling, local workspace development, unit-test planning, deployment configuration, notification functionality, biometric authentication, theme compatibility, File Security Scanner development, File Type Mismatch Detection, File Integrity Checker development, App Lock Auto-Lock functionality, Android update-system development, and documentation. All generated changes were reviewed, tested, committed, and pushed by the project owner.
+Cloud Guard has been developed with assistance from ChatGPT, OpenAI Codex, and Cursor for code analysis, authentication routing, responsive-layout improvements, PDF validation, security-status modeling, local workspace development, unit-test planning, deployment configuration, notification functionality, biometric authentication, theme compatibility, File Security Scanner development, suspicious and dangerous file detection, File Type Mismatch Detection, File Integrity Checker development, File Security Report development, App Lock Auto-Lock functionality, Android update-system development, Video Link Player development, TeraBox integration research, and documentation. All generated changes were reviewed, tested, committed, and pushed by the project owner.
 
 ## 📄 License
 
