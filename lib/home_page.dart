@@ -7,6 +7,7 @@ import 'security_activity_page.dart';
 import 'security_checklist_page.dart';
 import 'security_page.dart';
 import 'security_status.dart';
+import 'secure_file_locker_page.dart';
 import 'settings_page.dart';
 import 'storage_page.dart';
 import 'upload_page.dart';
@@ -310,7 +311,15 @@ class CloudGuardHome extends StatelessWidget {
 
                   const SizedBox(height: 16),
 
-                  // NEW: Video Link Player
+                  _actionButton(
+                    context,
+                    icon: Icons.lock,
+                    title: 'Secure File Locker',
+                    page: const SecureFileLockerPage(),
+                  ),
+
+                  const SizedBox(height: 16),
+
                   _actionButton(
                     context,
                     icon: Icons.play_circle_fill,
