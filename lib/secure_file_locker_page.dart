@@ -1,120 +1,218 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
+
+import 'secure_file_locker_storage.dart';
 
 class SecureFileLockerPage extends StatefulWidget {
   const SecureFileLockerPage({super.key});
 
   @override
-  State<SecureFileLockerPage> createState() => _SecureFileLockerPageState();
+  State<SecureFileLockerPage> createState() =>
+      _SecureFileLockerPageState();
 }
 
 class _SecureFileLockerPageState extends State<SecureFileLockerPage> {
   final List<_LockedFile> _lockedFiles = <_LockedFile>[];
 
-  Future<void> _addFile() async {
+  final SecureFileLockerStorage _storage =
+      const SecureFileLockerStorage();
+
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStoredFiles();
+  }
+
+  Future<void> _loadStoredFiles() async {
     try {
-      final files = await FilePicker.pickFiles();
+      final storedFiles = await _storage.loadFiles();
 
-      if (files.isEmpty) {
-        return;
-      }
+      if (!mounted) return;
 
-      final pickedFile = files.first;
-      final bytes = await pickedFile.readAsBytes();
+      setState(() {
+        _lockedFiles
+          ..clear()
+          ..addAll(
+            storedFiles.map(
+              (file) => _LockedFile(
+                name: file.name,
+                size: _formatFileSize(file.bytes.length),
+                bytes: file.bytes,
+              ),
+            ),
+          );
 
-      if (bytes.isEmpty) {
-        if (!mounted) return;
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Unable to read the selected file.'),
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Unable to load stored locker files.',
           ),
-        );
-        return;
-      }
-
-      final newFile = _LockedFile(
-        name: pickedFile.name,
-        size: _formatFileSize(bytes.length),
-        bytes: bytes,
+        ),
       );
+    }
+  }
 
-      final alreadyExists = _lockedFiles.any(
-        (file) =>
-            file.name.toLowerCase() == newFile.name.toLowerCase() &&
-            file.bytes.length == newFile.bytes.length,
+  Future<void> _addFile() async {
+    final files = await FilePicker.pickFiles();
+
+    if (files.isEmpty) return;
+
+    final pickedFile = files.first;
+    final bytes = await pickedFile.readAsBytes();
+
+    if (!mounted) return;
+
+    if (bytes.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('The selected file is empty.'),
+        ),
       );
+      return;
+    }
 
-      if (alreadyExists) {
-        if (!mounted) return;
+    final alreadyExists = _lockedFiles.any(
+      (file) =>
+          file.name.toLowerCase() == pickedFile.name.toLowerCase() &&
+          file.bytes.length == bytes.length,
+    );
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('This file is already in the locker.'),
-          ),
-        );
-        return;
-      }
+    if (alreadyExists) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('This file is already in the locker.'),
+        ),
+      );
+      return;
+    }
+
+    final newFile = _LockedFile(
+      name: pickedFile.name,
+      size: _formatFileSize(bytes.length),
+      bytes: bytes,
+    );
+
+    try {
+      final updatedFiles = <_LockedFile>[
+        ..._lockedFiles,
+        newFile,
+      ];
+
+      await _saveLockedFiles(updatedFiles);
+
+      if (!mounted) return;
 
       setState(() {
         _lockedFiles.add(newFile);
       });
 
-      if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${pickedFile.name} added to the locker.'),
+          content: Text(
+            '${pickedFile.name} added to Secure File Locker.',
+          ),
         ),
       );
-    } catch (error) {
-      if (!mounted) return;
-
+    } catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Unable to select the file: $error'),
+        const SnackBar(
+          content: Text(
+            'Unable to save this file to the locker.',
+          ),
         ),
       );
     }
+  }
+
+  Future<void> _saveLockedFiles(
+    List<_LockedFile> files,
+  ) async {
+    final storedFiles = files
+        .map(
+          (file) => StoredSecureFile(
+            name: file.name,
+            bytes: file.bytes,
+          ),
+        )
+        .toList();
+
+    await _storage.saveFiles(storedFiles);
   }
 
   void _openFile(_LockedFile file) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => _SecureFileDetailsPage(
+        builder: (context) => _SecureFilePreviewPage(
           file: file,
         ),
       ),
     );
   }
 
-  void _removeFile(_LockedFile file) {
-    setState(() {
-      _lockedFiles.remove(file);
-    });
+  Future<void> _removeFile(_LockedFile file) async {
+    final updatedFiles = _lockedFiles
+        .where((existingFile) => existingFile != file)
+        .toList();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${file.name} removed from the locker.'),
-      ),
-    );
+    try {
+      await _saveLockedFiles(updatedFiles);
+
+      if (!mounted) return;
+
+      setState(() {
+        _lockedFiles
+          ..clear()
+          ..addAll(updatedFiles);
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${file.name} removed from locker.',
+          ),
+        ),
+      );
+    } catch (_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Unable to remove this file.',
+          ),
+        ),
+      );
+    }
   }
 
-  String _formatFileSize(int bytes) {
+  static String _formatFileSize(int bytes) {
     if (bytes < 1024) {
       return '$bytes B';
     }
 
     if (bytes < 1024 * 1024) {
-      return '${(bytes / 1024).toStringAsFixed(1)} KB';
+      return '${(bytes / 1024).toStringAsFixed(2)} KB';
     }
 
     if (bytes < 1024 * 1024 * 1024) {
-      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(2)} MB';
     }
 
-    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
   }
 
   @override
@@ -123,288 +221,377 @@ class _SecureFileLockerPageState extends State<SecureFileLockerPage> {
       appBar: AppBar(
         title: const Text('Secure File Locker'),
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Icon(
-                          Icons.lock,
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 30,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Your Secure Files',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.lock,
+                            size: 42,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary,
+                          ),
+                          const SizedBox(width: 16),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Protected File Area',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(height: 6),
+                                Text(
+                                  'Files added here are stored locally and restored when the app is reopened.',
+                                ),
+                              ],
                             ),
-                            SizedBox(height: 4),
-                            Text(
-                              'Files stored here will be protected by Cloud Guard.',
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: _addFile,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add File to Locker'),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'Locked Files',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+
+                  const SizedBox(height: 20),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      onPressed: _addFile,
+                      icon: const Icon(Icons.add),
+                      label: const Text(
+                        'Add File',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 28),
+
+                  const Text(
+                    'Locked Files',
+                    style: TextStyle(
+                      fontSize: 21,
                       fontWeight: FontWeight.bold,
                     ),
-              ),
-              const SizedBox(height: 10),
-              Expanded(
-                child: _lockedFiles.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.separated(
-                        itemCount: _lockedFiles.length,
-                        separatorBuilder: (_, _) =>
-                            const SizedBox(height: 8),
-                        itemBuilder: (context, index) {
-                          final file = _lockedFiles[index];
+                  ),
 
-                          return Card(
-                            child: ListTile(
-                              leading: const CircleAvatar(
-                                child: Icon(Icons.lock),
+                  const SizedBox(height: 12),
+
+                  if (_lockedFiles.isEmpty)
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.folder_off,
+                                size: 50,
+                                color: Colors.grey.shade500,
                               ),
-                              title: Text(
-                                file.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                              const SizedBox(height: 12),
+                              const Text(
+                                'No files in the locker yet.',
+                                textAlign: TextAlign.center,
                               ),
-                              subtitle: Text(file.size),
-                              onTap: () => _openFile(file),
-                              trailing: PopupMenuButton<String>(
-                                onSelected: (value) {
-                                  if (value == 'open') {
-                                    _openFile(file);
-                                  } else if (value == 'remove') {
-                                    _removeFile(file);
-                                  }
-                                },
-                                itemBuilder: (context) => const [
-                                  PopupMenuItem(
-                                    value: 'open',
-                                    child: Text('Open'),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 'remove',
-                                    child: Text('Remove'),
-                                  ),
-                                ],
+                              const SizedBox(height: 6),
+                              const Text(
+                                'Use Add File to place a file in the locker.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    ListView.separated(
+                      shrinkWrap: true,
+                      physics:
+                          const NeverScrollableScrollPhysics(),
+                      itemCount: _lockedFiles.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 10),
+                      itemBuilder: (context, index) {
+                        final file = _lockedFiles[index];
+
+                        return Card(
+                          child: ListTile(
+                            leading: const CircleAvatar(
+                              child: Icon(
+                                Icons.insert_drive_file,
                               ),
                             ),
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+                            title: Text(
+                              file.name,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            subtitle: Text(file.size),
+                            trailing:
+                                PopupMenuButton<String>(
+                              onSelected: (value) {
+                                if (value == 'open') {
+                                  _openFile(file);
+                                }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.lock_outline,
-            size: 70,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'No files in the locker',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+                                if (value == 'remove') {
+                                  _removeFile(file);
+                                }
+                              },
+                              itemBuilder: (context) => const [
+                                PopupMenuItem(
+                                  value: 'open',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.visibility),
+                                      SizedBox(width: 10),
+                                      Text('Open'),
+                                    ],
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'remove',
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.delete_outline,
+                                      ),
+                                      SizedBox(width: 10),
+                                      Text('Remove'),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Add a file to keep it in your secure locker.',
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 18),
-          OutlinedButton.icon(
-            onPressed: _addFile,
-            icon: const Icon(Icons.add),
-            label: const Text('Add Your First File'),
-          ),
-        ],
-      ),
     );
   }
 }
 
-class _SecureFileDetailsPage extends StatelessWidget {
-  const _SecureFileDetailsPage({
+class _SecureFilePreviewPage extends StatelessWidget {
+  const _SecureFilePreviewPage({
     required this.file,
   });
 
   final _LockedFile file;
 
-  String _getExtension(String name) {
-    final lastDot = name.lastIndexOf('.');
+  String get _extension {
+    final dotIndex = file.name.lastIndexOf('.');
 
-    if (lastDot == -1 || lastDot == name.length - 1) {
-      return 'Unknown';
+    if (dotIndex == -1 ||
+        dotIndex == file.name.length - 1) {
+      return '';
     }
 
-    return name.substring(lastDot + 1).toUpperCase();
+    return file.name
+        .substring(dotIndex + 1)
+        .toLowerCase();
   }
+
+  bool get _isPdf => _extension == 'pdf';
+
+  bool get _isImage =>
+      _extension == 'png' ||
+      _extension == 'jpg' ||
+      _extension == 'jpeg' ||
+      _extension == 'gif' ||
+      _extension == 'webp';
+
+  bool get _isText =>
+      _extension == 'txt' ||
+      _extension == 'csv';
 
   @override
   Widget build(BuildContext context) {
-    final extension = _getExtension(file.name);
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Secure File'),
+        title: Text(
+          file.name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
+      body: _buildPreview(context),
+    );
+  }
 
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Icon(
-                  Icons.lock,
-                  size: 50,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
+  Widget _buildPreview(BuildContext context) {
+    if (_isPdf) {
+      return SfPdfViewer.memory(
+        file.bytes,
+      );
+    }
 
-              const SizedBox(height: 24),
+    if (_isImage) {
+      return _ImagePreview(
+        file: file,
+      );
+    }
 
-              Text(
-                file.name,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 21,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+    if (_isText) {
+      return _TextPreview(
+        file: file,
+      );
+    }
 
-              const SizedBox(height: 24),
+    return _UnsupportedFilePreview(
+      file: file,
+      extension: _extension,
+    );
+  }
+}
 
-              Card(
-                child: Column(
-                  children: [
-                    _infoTile(
-                      icon: Icons.insert_drive_file,
-                      title: 'File Type',
-                      value: extension,
-                    ),
-                    const Divider(height: 1),
-                    _infoTile(
-                      icon: Icons.storage,
-                      title: 'File Size',
-                      value: file.size,
-                    ),
-                    const Divider(height: 1),
-                    _infoTile(
-                      icon: Icons.lock,
-                      title: 'Locker Status',
-                      value: 'Stored in current session',
-                    ),
-                  ],
-                ),
-              ),
+class _ImagePreview extends StatelessWidget {
+  const _ImagePreview({
+    required this.file,
+  });
 
-              const SizedBox(height: 24),
+  final _LockedFile file;
 
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Actual file opening will be connected next.',
-                        ),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.open_in_new),
-                  label: const Text('Open File'),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              const Text(
-                'The file is currently kept in memory. '
-                'Permanent encrypted storage will be added next.',
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: InteractiveViewer(
+        minScale: 0.5,
+        maxScale: 5,
+        child: Image.memory(
+          file.bytes,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            return const Padding(
+              padding: EdgeInsets.all(24),
+              child: Text(
+                'Unable to preview this image.',
                 textAlign: TextAlign.center,
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
   }
+}
 
-  Widget _infoTile({
-    required IconData icon,
-    required String title,
-    required String value,
-  }) {
-    return ListTile(
-      leading: Icon(icon),
-      title: Text(title),
-      subtitle: Text(value),
+class _TextPreview extends StatelessWidget {
+  const _TextPreview({
+    required this.file,
+  });
+
+  final _LockedFile file;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = utf8.decode(
+      file.bytes,
+      allowMalformed: true,
+    );
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: SelectableText(
+        text.isEmpty
+            ? 'This text file is empty.'
+            : text,
+        style: const TextStyle(
+          fontSize: 15,
+          height: 1.5,
+        ),
+      ),
+    );
+  }
+}
+
+class _UnsupportedFilePreview extends StatelessWidget {
+  const _UnsupportedFilePreview({
+    required this.file,
+    required this.extension,
+  });
+
+  final _LockedFile file;
+  final String extension;
+
+  @override
+  Widget build(BuildContext context) {
+    final displayExtension =
+        extension.isEmpty
+            ? 'Unknown'
+            : extension.toUpperCase();
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.insert_drive_file,
+                  size: 64,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  file.name,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'File type: $displayExtension',
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Size: ${file.size}',
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Preview is not available for this file type yet.',
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -418,5 +605,5 @@ class _LockedFile {
 
   final String name;
   final String size;
-  final List<int> bytes;
+  final Uint8List bytes;
 }
