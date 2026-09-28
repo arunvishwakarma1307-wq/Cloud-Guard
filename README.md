@@ -10,7 +10,7 @@
 [![Cursor](https://img.shields.io/badge/AI%20Assisted-Cursor-000000?logo=cursor&logoColor=white)](https://cursor.com/)
 [![Codex](https://img.shields.io/badge/AI%20Assisted-Codex-412991?logo=openai&logoColor=white)](https://openai.com/codex/)
 
-A Flutter-based cloud security and file-management MVP focused on honest account-security information, local PDF validation, a temporary local file workspace, file security scanning, file type mismatch detection, suspicious and dangerous file detection, file security reporting, file integrity checking, App Lock PIN and biometric protection, auto-lock controls, theme settings, functional browser notifications, a custom Android update notification system, and direct video link playback.
+A Flutter-based cloud security and file-management MVP focused on honest account-security information, local PDF validation, a temporary local file workspace, file security scanning, file type mismatch detection, suspicious and dangerous file detection, file security reporting, file integrity checking, App Lock PIN and biometric protection, auto-lock controls, theme settings, functional browser notifications, a custom Android update notification system and direct video link playback, along with a Secure File Locker with permanent local storage, individual file locking, a common Locker PIN, and Firebase-verified Locker PIN reset.
 
 ## 🔗 Try Cloud Guard
 
@@ -52,6 +52,9 @@ Cloud Guard is currently in **MVP development**.
 | File Security Report | Available and tested |
 | Video Link Player | Available and tested for supported direct video links |
 | TeraBox integration | Research and official API integration groundwork completed; authorization and playable-stream integration pending |
+| Secure File Locker | Implemented with permanent local storage |
+| Secure File Locker PIN | Implemented with individual file locking and one common 4–6 digit Locker PIN |
+| Locker Forgot PIN | Implemented with Firebase account verification and Locker PIN replacement |
 
 
 > **Storage honesty:** Cloud Guard does not simulate cloud uploads, upload progress, cloud quota, stored cloud files, or successful cloud-upload messages. Firebase Storage is not currently enabled or configured for live uploads.
@@ -84,6 +87,9 @@ Cloud Guard is currently in **MVP development**.
 | 🤖 | Update Popup | Custom Android update notification popup with Cloud Guard branding, robot artwork, version information, release notes, and an official GitHub download action. |
 | 🎬 | Video Link Player | Plays supported direct video links inside Cloud Guard with Chewie controls, fullscreen, playback speed, mute, 10-second seeking, and center playback feedback. |
 | ☁️ | TeraBox Integration | Official TeraBox API integration groundwork for shared-link metadata and video streaming has been researched; authorization and playable-stream integration are still pending. |
+| 🔒 | Secure File Locker | Stores selected files locally with permanent persistence across app restarts. |
+| 🔐 | Individual File Lock | Each locker file can be locked separately using one common 4–6 digit Locker PIN. |
+| 🔑 | Locker Forgot PIN | Firebase account verification allows the user to replace the Locker PIN for all locked files. |
 
 ## 🖥️ Current Screens
 
@@ -100,6 +106,7 @@ Cloud Guard is currently in **MVP development**.
 | ⚙️ | Settings | Access account, application, theme, App Lock, Auto-Lock, and notification settings. |
 | 🔐 File Integrity | Calculate SHA-256 hashes, save a trusted original baseline, and compare the current file against that baseline. |
 | 🎬 Video Link Player | Play supported direct video links inside Cloud Guard with playback controls and fullscreen playback. |
+| 🔒 Secure File Locker | Store local files, lock individual files, unlock them with the common Locker PIN, and manage Locker PIN settings. |
 
 ## 📄 PDF and Local Workspace Flow
 
@@ -148,6 +155,30 @@ Add valid PDF to the shared local workspace
 * Clear All requires confirmation before removing every local entry.
 
 > The local workspace is temporary and in-memory. Entries are not uploaded to Firebase Storage and may disappear after the app is completely closed or restarted.
+
+## 🔒 Secure File Locker
+
+Cloud Guard includes a local Secure File Locker that is separate from the App Lock PIN.
+
+### Locker Features
+
+- Files can be added to the locker normally.
+- Each individual file can be locked separately.
+- The first locked file requires creation of a 4–6 digit Locker PIN.
+- The same Locker PIN is shared by all locked files.
+- Locked files require the Locker PIN before they can be opened.
+- Unlocked files can be opened normally.
+- Locker files remain available after logout, login, and app restart through persistent local storage.
+- Forgot Locker PIN uses Firebase account verification before allowing the user to create a new Locker PIN.
+- After changing the Locker PIN, the new PIN becomes active for all locked files.
+- The old Locker PIN no longer works.
+- The Locker PIN is completely separate from the App Lock PIN.
+
+### Storage Limitation
+
+The current Secure File Locker uses local application storage with SharedPreferences and Base64-encoded file data.
+
+**This is not file encryption.** The Locker PIN controls access through the Cloud Guard application, but the current implementation does not provide encrypted-at-rest file storage. True encrypted file storage with secure key management remains future work.
 
 ## ☁️ Firebase Storage Limitation
 
@@ -400,6 +431,8 @@ build/app/outputs/flutter-apk/app-release.apk
 | Auto-Lock manual test | Enable Auto-Lock, select a duration, background the application, return after the selected duration, and verify that App Lock is shown |
 | Update popup manual test | Install an older Android release, publish a newer trusted release manifest, open the app, and verify the update popup and GitHub release action |
 | Video Link Player manual test | Open Video Link Player, enter a supported direct MP4 URL, and verify playback, play/pause, 10-second seeking, volume, playback speed, fullscreen, center playback feedback, and close-video behavior |
+| Secure File Locker manual test | Add a file, lock it, verify correct and incorrect Locker PIN behavior, restart the app, verify file persistence, and confirm unlocked files open normally |
+| Locker Forgot PIN manual test | Use Forgot Locker PIN, complete Firebase account verification, set a new Locker PIN, verify the new PIN unlocks existing locked files, and verify the old PIN fails |
 
 
 The current project test suite passes, and Flutter static analysis reports no issues.
@@ -428,6 +461,8 @@ For each feature, inspect the relevant files first, make a small scoped change, 
 | 8 | Improve branding, privacy information, and release configuration. | Future work |
 | 9 | Complete Android biometric device testing and refine biometric fallback behavior if needed. | Implemented; device testing pending |
 | 10 | Complete authorized TeraBox API integration for shared-link video metadata and M3U8 playback. | Pending official API authorization and integration requirements |
+| 11 | Add true encrypted-at-rest Secure File Locker storage with secure key management. | Future work |
+| 12 | Fix the known Web same-file refresh/reselection issue in File Integrity Checker. | Pending |
 
 ## 🧾 Project History
 
@@ -501,13 +536,19 @@ For each feature, inspect the relevant files first, make a small scoped change, 
 
 * **Task 34:** Added TeraBox integration groundwork by researching the official TeraBox Open Platform APIs, designing the shared-link resolution flow, and preparing resolver architecture for future authorized video-stream integration.
 
+* **Task 35:** Added Secure File Locker with permanent local storage so locker files remain available across app restarts and login sessions.
+
+* **Task 36:** Added individual file locking with one common 4–6 digit Locker PIN shared across all locked files, separate from the App Lock PIN.
+
+* **Task 37:** Added Firebase-verified Locker Forgot PIN flow, allowing the user to verify the Firebase account, create a new Locker PIN, and replace the previous PIN for all locked files.
+
 ## 🤝 Contributing
 
 Cloud Guard is an MVP under active development. Keep changes focused, preserve existing authentication and UI behavior unless a task specifically requires otherwise, test changes locally, and document new functionality in this README.
 
 ## 📝 Development Notes
 
-Cloud Guard has been developed with assistance from ChatGPT, OpenAI Codex, and Cursor for code analysis, authentication routing, responsive-layout improvements, PDF validation, security-status modeling, local workspace development, unit-test planning, deployment configuration, notification functionality, biometric authentication, theme compatibility, File Security Scanner development, suspicious and dangerous file detection, File Type Mismatch Detection, File Integrity Checker development, File Security Report development, App Lock Auto-Lock functionality, Android update-system development, Video Link Player development, TeraBox integration research, and documentation. All generated changes were reviewed, tested, committed, and pushed by the project owner.
+Cloud Guard has been developed with assistance from ChatGPT, OpenAI Codex, and Cursor for code analysis, authentication routing, responsive-layout improvements, PDF validation, security-status modeling, local workspace development, unit-test planning, deployment configuration, notification functionality, biometric authentication, theme compatibility, File Security Scanner development, suspicious and dangerous file detection, File Type Mismatch Detection, File Integrity Checker development, File Security Report development, App Lock Auto-Lock functionality, Android update-system development, Video Link Player development, TeraBox integration research, Secure File Locker development, permanent local storage, individual file locking, Locker PIN management, Firebase-verified Locker PIN reset and documentation. All generated changes were reviewed, tested, committed, and pushed by the project owner.
 
 ## 📄 License
 
