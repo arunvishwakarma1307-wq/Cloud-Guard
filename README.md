@@ -20,9 +20,9 @@ https://arunvishwakarma1307-wq.github.io/Cloud-Guard/
 
 ### **📱 Android APK**
 
-https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/download/v1.0.9/app-release.apk
+https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/download/v1.0.10/app-release.apk
 
-[View Android Release v1.0.9](https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/tag/v1.0.9)
+[View Android Release v1.0.10](https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/tag/v1.0.10)
 
 > Android users: Download the APK, open it from the Downloads folder, allow installation from this source if Android asks for permission, install it, and then open Cloud Guard. Windows users should use the Web Demo because Windows cannot open Android APK files directly.
 
