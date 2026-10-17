@@ -1,7 +1,9 @@
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'file_integrity_page.dart';
+import 'network_security_center_page.dart';
 import 'security_activity_log.dart';
 import 'security_activity_page.dart';
 import 'security_checklist_page.dart';
@@ -289,6 +291,16 @@ class CloudGuardHome extends StatelessWidget {
                     icon: Icons.history,
                     title: 'Security Activity',
                     page: const SecurityActivityPage(),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // NEW: Network Security Center
+                  _actionButton(
+                    context,
+                    icon: Icons.shield_outlined,
+                    title: 'Network Security Center',
+                    page: const NetworkSecurityCenterPage(),
                   ),
 
                   const SizedBox(height: 16),
