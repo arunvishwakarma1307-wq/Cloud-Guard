@@ -20,9 +20,9 @@ https://arunvishwakarma1307-wq.github.io/Cloud-Guard/
 
 ### **📱 Android APK**
 
-https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/download/v1.0.10/app-release.apk
+https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/download/v1.0.11/app-release.apk
 
-[View Android Release v1.0.10](https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/tag/v1.0.10)
+[View Android Release v1.0.11](https://github.com/arunvishwakarma1307-wq/Cloud-Guard/releases/tag/v1.0.11)
 
 > Android users: Download the APK, open it from the Downloads folder, allow installation from this source if Android asks for permission, install it, and then open Cloud Guard. Windows users should use the Web Demo because Windows cannot open Android APK files directly.
 
@@ -85,7 +85,9 @@ Cloud Guard is currently in **MVP development**.
 | ⏱️ | Auto-Lock | Automatically locks the application after a configurable period in the background, including Immediately, 1 minute, 5 minutes, 15 minutes, 30 minutes, or Never. |
 | 🔄 | Update Checker | Android update checking through a trusted GitHub release manifest with version comparison and trusted release URL validation. |
 | 🤖 | Update Popup | Custom Android update notification popup with Cloud Guard branding, robot artwork, version information, release notes, and an official GitHub download action. |
+| 🌐 | Network Security Center | Checks the current connection type, tests connectivity through an endpoint request, and provides a manual Wi-Fi security and device-update checklist with progress tracking. Checklist items are user-confirmed, not automatic security scans. |
 | 🎬 | Video Link Player | Plays supported direct video links inside Cloud Guard with Chewie controls, fullscreen, playback speed, mute, 10-second seeking, and center playback feedback. |
+| 🌐 Network Security Center | View the detected connection type, test connectivity, and manually track Wi-Fi security and device-update checklist items. |
 | ☁️ | TeraBox Integration | Official TeraBox API integration groundwork for shared-link metadata and video streaming has been researched; authorization and playable-stream integration are still pending. |
 | 🔒 | Secure File Locker | Stores selected files locally with permanent persistence across app restarts. |
 | 🔐 | Individual File Lock | Each locker file can be locked separately using one common 4–6 digit Locker PIN. |
@@ -315,6 +317,8 @@ Security Settings headings and page backgrounds are also theme-aware so that tex
 
 * `http`
 
+* `connectivity_plus` for network connection status detection
+
 * `package_info_plus`
 
 * `url_launcher`
@@ -541,6 +545,8 @@ For each feature, inspect the relevant files first, make a small scoped change, 
 * **Task 36:** Added individual file locking with one common 4–6 digit Locker PIN shared across all locked files, separate from the App Lock PIN.
 
 * **Task 37:** Added Firebase-verified Locker Forgot PIN flow, allowing the user to verify the Firebase account, create a new Locker PIN, and replace the previous PIN for all locked files.
+
+* **Task 38:** Added a Network Security Center with network connection detection, endpoint connectivity testing, a manual Wi-Fi security and device-update checklist, and checklist progress tracking. *
 
 ## 🤝 Contributing
 
