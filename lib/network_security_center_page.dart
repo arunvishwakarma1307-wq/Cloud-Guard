@@ -26,6 +26,10 @@ class _NetworkSecurityCenterPageState
   String? _error;
   String? _internetMessage;
 
+  // Manual confirmations only; these are not automatic security scans.
+  bool _wifiSecurityChecked = false;
+  bool _deviceUpdatesChecked = false;
+
   @override
   void initState() {
     super.initState();
@@ -240,6 +244,10 @@ class _NetworkSecurityCenterPageState
     return names.join(', ');
   }
 
+  int get _completedManualChecks =>
+      (_wifiSecurityChecked ? 1 : 0) +
+      (_deviceUpdatesChecked ? 1 : 0);
+
   @override
   void dispose() {
     _subscription?.cancel();
@@ -259,9 +267,7 @@ class _NetworkSecurityCenterPageState
             tooltip: 'Refresh status',
             onPressed: _loading || _internetLoading
                 ? null
-                : () async {
-                    await _checkConnection();
-                  },
+                : _checkConnection,
             icon: const Icon(Icons.refresh),
           ),
         ],
@@ -344,9 +350,7 @@ class _NetworkSecurityCenterPageState
                         label: const Text('Check network'),
                       ),
                       FilledButton.icon(
-                        onPressed: _internetLoading
-                            ? null
-                            : _testInternet,
+                        onPressed: _internetLoading ? null : _testInternet,
                         icon: const Icon(Icons.public),
                         label: const Text('Test internet'),
                       ),
@@ -361,44 +365,81 @@ class _NetworkSecurityCenterPageState
             'Security Checklist',
             style: theme.textTheme.titleLarge,
           ),
+          const SizedBox(height: 6),
+          Text(
+            '$_completedManualChecks of 2 manual checks completed',
+            style: theme.textTheme.bodyMedium,
+          ),
           const SizedBox(height: 8),
-          const _ChecklistItem(
+          LinearProgressIndicator(
+            value: _completedManualChecks / 2,
+            minHeight: 6,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          const SizedBox(height: 12),
+          _ChecklistItem(
             title: 'Network connection status',
             description:
                 'Checks the connection type reported by your device.',
-            status: 'Device check',
+            status: _loading ? 'Checking...' : _connectionName,
             icon: Icons.wifi,
+            checked: !_loading && _error == null && _hasConnection,
+            interactive: false,
           ),
-          const _ChecklistItem(
+          _ChecklistItem(
             title: 'Internet endpoint test',
             description:
                 'A successful response confirms this endpoint responded, '
                 'not that every website is reachable.',
-            status: 'Run test above',
+            status: _internetLoading
+                ? 'Test running...'
+                : _internetAvailable == true
+                    ? 'Endpoint responded'
+                    : _internetAvailable == false
+                        ? 'Test unsuccessful'
+                        : 'Not tested yet',
             icon: Icons.public,
+            checked: _internetAvailable == true,
+            interactive: false,
           ),
-          const _ChecklistItem(
+          _ChecklistItem(
             title: 'Wi-Fi encryption and router security',
             description:
-                'Not automatically verified. Check router settings '
-                'for WPA2-AES or WPA3.',
-            status: 'Not checked',
+                'Open your router settings and confirm WPA2-AES or WPA3 '
+                'is enabled. Tick only after you have checked it.',
+            status: _wifiSecurityChecked ? 'Manually checked' : 'Not checked',
             icon: Icons.router_outlined,
+            checked: _wifiSecurityChecked,
+            interactive: true,
+            onChanged: (value) {
+              setState(() {
+                _wifiSecurityChecked = value;
+              });
+            },
           ),
-          const _ChecklistItem(
+          _ChecklistItem(
             title: 'Device updates',
             description:
-                'Check for operating system and app security updates '
-                'in your device settings.',
-            status: 'Not checked',
+                'Check your device settings for operating system and app '
+                'security updates. Tick after checking.',
+            status: _deviceUpdatesChecked ? 'Manually checked' : 'Not checked',
             icon: Icons.system_update_outlined,
+            checked: _deviceUpdatesChecked,
+            interactive: true,
+            onChanged: (value) {
+              setState(() {
+                _deviceUpdatesChecked = value;
+              });
+            },
           ),
           const _ChecklistItem(
             title: 'Malware and phishing',
             description:
                 'This page does not scan for malware or detect phishing.',
-            status: 'Not checked',
+            status: 'Not scanned',
             icon: Icons.gpp_bad_outlined,
+            checked: false,
+            interactive: false,
           ),
           const SizedBox(height: 16),
           Card(
@@ -496,24 +537,71 @@ class _ChecklistItem extends StatelessWidget {
     required this.description,
     required this.status,
     required this.icon,
+    required this.checked,
+    required this.interactive,
+    this.onChanged,
   });
 
   final String title;
   final String description;
   final String status;
   final IconData icon;
+  final bool checked;
+  final bool interactive;
+  final ValueChanged<bool>? onChanged;
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: ListTile(
-        leading: Icon(icon, size: 28),
-        title: Text(title),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 6),
-          child: Text('$description\n\nStatus: $status'),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Icon(
+                icon,
+                size: 27,
+                color: checked ? Colors.green : null,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 5),
+                  Text(description),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Status: $status',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            if (interactive)
+              Checkbox(
+                value: checked,
+                onChanged: onChanged == null
+                    ? null
+                    : (value) => onChanged!(value ?? false),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Icon(
+                  checked ? Icons.check_circle : Icons.info_outline,
+                  color: checked ? Colors.green : null,
+                ),
+              ),
+          ],
         ),
-        isThreeLine: true,
       ),
     );
   }
